@@ -1,72 +1,89 @@
-import XCTest
+//
+//  ARCDevToolsTests.swift
+//  ARCDevTools
+//
+//  Created by ARC Labs Studio on 11/12/2024.
+//
+
+import Foundation
+import Testing
 @testable import ARCDevTools
 
-final class ARCDevToolsTests: XCTestCase {
+@Suite("ARCDevTools Core Tests")
+struct ARCDevToolsTests {
 
-    // MARK: - Version Tests
+    // MARK: Version Tests
 
-    func testVersion() {
-        XCTAssertEqual(ARCDevTools.version, "1.0.0")
+    @Test("Version is correct")
+    func versionIsCorrect() {
+        #expect(ARCDevTools.version == "1.0.0")
     }
 
-    // MARK: - Bundle Tests
+    // MARK: Bundle Tests
 
-    func testBundleExists() {
+    @Test("Bundle exists")
+    func bundleExists() {
         let bundle = ARCDevTools.bundle
-        XCTAssertNotNil(bundle)
+        // Bundle is always non-nil, just verify it's accessible
+        #expect(bundle.bundleIdentifier != nil || bundle.bundlePath.isEmpty == false)
     }
 
-    // MARK: - Config Resources Tests
+    // MARK: Config Resources Tests
 
-    func testSwiftLintConfigExists() {
+    @Test("SwiftLint config exists")
+    func swiftLintConfigExists() {
         let config = ARCDevTools.swiftlintConfig
-        XCTAssertNotNil(config, "SwiftLint config should exist")
+        #expect(config != nil, "SwiftLint config should exist")
 
         if let url = config {
-            XCTAssertTrue(FileManager.default.fileExists(atPath: url.path), "SwiftLint config file should exist at path")
+            #expect(FileManager.default.fileExists(atPath: url.path), "SwiftLint config file should exist at path")
         }
     }
 
-    func testSwiftFormatConfigExists() {
+    @Test("SwiftFormat config exists")
+    func swiftFormatConfigExists() {
         let config = ARCDevTools.swiftformatConfig
-        XCTAssertNotNil(config, "SwiftFormat config should exist")
+        #expect(config != nil, "SwiftFormat config should exist")
 
         if let url = config {
-            XCTAssertTrue(FileManager.default.fileExists(atPath: url.path), "SwiftFormat config file should exist at path")
+            #expect(FileManager.default.fileExists(atPath: url.path), "SwiftFormat config file should exist at path")
         }
     }
 
-    // MARK: - Scripts Directory Tests
+    // MARK: Scripts Directory Tests
 
-    func testScriptsDirectoryExists() {
+    @Test("Scripts directory exists")
+    func scriptsDirectoryExists() {
         let scriptsDir = ARCDevTools.scriptsDirectory
-        XCTAssertNotNil(scriptsDir, "Scripts directory should exist")
+        #expect(scriptsDir != nil, "Scripts directory should exist")
 
         if let url = scriptsDir {
             var isDirectory: ObjCBool = false
             let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
-            XCTAssertTrue(exists, "Scripts directory should exist at path")
-            XCTAssertTrue(isDirectory.boolValue, "Scripts path should be a directory")
+            #expect(exists, "Scripts directory should exist at path")
+            #expect(isDirectory.boolValue, "Scripts path should be a directory")
         }
     }
 
-    // MARK: - Templates Directory Tests
+    // MARK: Templates Directory Tests
 
-    func testTemplatesDirectoryExists() {
+    @Test("Templates directory exists")
+    func templatesDirectoryExists() {
         let templatesDir = ARCDevTools.templatesDirectory
-        XCTAssertNotNil(templatesDir, "Templates directory should exist")
+        #expect(templatesDir != nil, "Templates directory should exist")
 
         if let url = templatesDir {
             var isDirectory: ObjCBool = false
             let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
-            XCTAssertTrue(exists, "Templates directory should exist at path")
-            XCTAssertTrue(isDirectory.boolValue, "Templates path should be a directory")
+            #expect(exists, "Templates directory should exist at path")
+            #expect(isDirectory.boolValue, "Templates path should be a directory")
         }
     }
 
-    // MARK: - Utilities Tests
+    // MARK: Utilities Tests
 
-    func testCopyResourceCreatesDestination() throws {
+    @Test("Copy resource creates destination")
+    func copyResourceCreatesDestination() throws {
         // Given
         let tempDir = FileManager.default.temporaryDirectory
         let testFile = tempDir.appendingPathComponent("test.txt")
@@ -79,17 +96,18 @@ final class ARCDevToolsTests: XCTestCase {
         try ARCDevTools.copyResource(from: testFile, to: destination)
 
         // Then
-        XCTAssertTrue(FileManager.default.fileExists(atPath: destination.path))
+        #expect(FileManager.default.fileExists(atPath: destination.path))
 
         let content = try String(contentsOf: destination)
-        XCTAssertEqual(content, "Test content")
+        #expect(content == "Test content")
 
         // Cleanup
         try? FileManager.default.removeItem(at: testFile)
         try? FileManager.default.removeItem(at: destination)
     }
 
-    func testMakeExecutable() throws {
+    @Test("Make executable sets correct permissions")
+    func makeExecutableSetsCorrectPermissions() throws {
         // Given
         let tempDir = FileManager.default.temporaryDirectory
         let scriptFile = tempDir.appendingPathComponent("script.sh")
@@ -103,27 +121,29 @@ final class ARCDevToolsTests: XCTestCase {
         // Then
         let attributes = try FileManager.default.attributesOfItem(atPath: scriptFile.path)
         let permissions = attributes[.posixPermissions] as? NSNumber
-        XCTAssertNotNil(permissions)
-        XCTAssertEqual(permissions?.uint16Value, 0o755)
+        #expect(permissions != nil)
+        #expect(permissions?.uint16Value == 0o755)
 
         // Cleanup
         try? FileManager.default.removeItem(at: scriptFile)
     }
 
-    // MARK: - Configuration Tests
+    // MARK: Configuration Tests
 
-    func testDefaultConfiguration() {
+    @Test("Default configuration has correct values")
+    func defaultConfigurationHasCorrectValues() {
         let config = ARCConfiguration.default
 
-        XCTAssertEqual(config.lintRules.warningThreshold, 10)
-        XCTAssertEqual(config.lintRules.errorThreshold, 50)
-        XCTAssertEqual(config.formatRules.indent, 4)
-        XCTAssertEqual(config.formatRules.maxWidth, 120)
-        XCTAssertTrue(config.enablePreCommitHooks)
-        XCTAssertTrue(config.autoFormat)
+        #expect(config.lintRules.warningThreshold == 10)
+        #expect(config.lintRules.errorThreshold == 50)
+        #expect(config.formatRules.indent == 4)
+        #expect(config.formatRules.maxWidth == 120)
+        #expect(config.enablePreCommitHooks == true)
+        #expect(config.autoFormat == true)
     }
 
-    func testConfigurationPersistence() throws {
+    @Test("Configuration persistence works correctly")
+    func configurationPersistenceWorksCorrectly() throws {
         // Given
         let tempDir = FileManager.default.temporaryDirectory
         let configFile = tempDir.appendingPathComponent("test-config.json")
@@ -133,11 +153,11 @@ final class ARCDevToolsTests: XCTestCase {
         try config.save(to: configFile)
 
         // Then
-        XCTAssertTrue(FileManager.default.fileExists(atPath: configFile.path))
+        #expect(FileManager.default.fileExists(atPath: configFile.path))
 
         let loadedConfig = ARCConfiguration.load(from: configFile)
-        XCTAssertEqual(loadedConfig.lintRules.warningThreshold, config.lintRules.warningThreshold)
-        XCTAssertEqual(loadedConfig.formatRules.indent, config.formatRules.indent)
+        #expect(loadedConfig.lintRules.warningThreshold == config.lintRules.warningThreshold)
+        #expect(loadedConfig.formatRules.indent == config.formatRules.indent)
 
         // Cleanup
         try? FileManager.default.removeItem(at: configFile)

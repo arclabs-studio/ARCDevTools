@@ -1,3 +1,10 @@
+//
+//  main.swift
+//  ARCDevTools
+//
+//  Created by ARC Labs Studio on 11/12/2024.
+//
+
 import Foundation
 import ARCDevTools
 
@@ -11,8 +18,11 @@ struct ARCSetup {
         let currentDir = URL(fileURLWithPath: fileManager.currentDirectoryPath)
 
         // 1. Verificar que estamos en raíz de proyecto
-        guard fileManager.fileExists(atPath: currentDir.appendingPathComponent("Package.swift").path) ||
-              fileManager.fileExists(atPath: currentDir.appendingPathComponent(".xcodeproj").pathExtension.isEmpty == false) else {
+        let hasPackageSwift = fileManager.fileExists(atPath: currentDir.appendingPathComponent("Package.swift").path)
+        let contents = (try? fileManager.contentsOfDirectory(atPath: currentDir.path)) ?? []
+        let hasXcodeProject = contents.contains { $0.hasSuffix(".xcodeproj") }
+
+        guard hasPackageSwift || hasXcodeProject else {
             print("❌ Error: Ejecuta este comando desde la raíz de tu proyecto")
             throw ExitCode.failure
         }
@@ -67,13 +77,15 @@ struct ARCSetup {
             return
         }
 
-        guard let scriptsDir = ARCDevTools.scriptsDirectory,
-              let preCommitSource = Bundle.module.url(
-                forResource: "pre-commit",
-                withExtension: nil,
-                subdirectory: "Resources/Scripts"
-              ) else {
+        guard let scriptsDir = ARCDevTools.scriptsDirectory else {
             print("   ❌ No se encontraron scripts en el package")
+            return
+        }
+
+        let preCommitSource = scriptsDir.appendingPathComponent("pre-commit")
+
+        guard FileManager.default.fileExists(atPath: preCommitSource.path) else {
+            print("   ❌ No se encontró pre-commit script")
             return
         }
 

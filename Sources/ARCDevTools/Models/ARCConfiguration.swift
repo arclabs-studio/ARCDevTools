@@ -1,6 +1,13 @@
+//
+//  ARCConfiguration.swift
+//  ARCDevTools
+//
+//  Created by ARC Labs Studio on 11/12/2024.
+//
+
 import Foundation
 
-/// Configuración centralizada de estándares ARC Labs
+/// Centralized configuration for ARC Labs standards
 public struct ARCConfiguration: Codable, Sendable {
 
     // MARK: - Lint Rules
@@ -51,7 +58,7 @@ public struct ARCConfiguration: Codable, Sendable {
 
     // MARK: - Persistence
 
-    /// Carga configuración desde archivo o usa default
+    /// Loads configuration from file or uses default
     public static func load(from url: URL) -> ARCConfiguration {
         guard let data = try? Data(contentsOf: url),
               let config = try? JSONDecoder().decode(ARCConfiguration.self, from: data) else {
@@ -60,7 +67,7 @@ public struct ARCConfiguration: Codable, Sendable {
         return config
     }
 
-    /// Guarda configuración a disco
+    /// Saves configuration to disk
     public func save(to url: URL) throws {
         let data = try JSONEncoder().encode(self)
         try data.write(to: url)

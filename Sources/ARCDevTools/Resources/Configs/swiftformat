@@ -29,8 +29,7 @@
 --linebreaks lf
 
 # Self
---self insert
---selfrequired
+--self remove
 
 # Wrapping
 --wrapternary before-operators
