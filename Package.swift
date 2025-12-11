@@ -1,31 +1,50 @@
 // swift-tools-version: 6.0
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "ARCDevTools",
     platforms: [
-        .iOS(.v14),
-        .macOS(.v11),
-        .tvOS(.v14),
-        .watchOS(.v7)
+        .macOS(.v13),
+        .iOS(.v17)
     ],
     products: [
+        // Librería principal
         .library(
             name: "ARCDevTools",
             targets: ["ARCDevTools"]
         ),
+        // Ejecutable para setup
+        .executable(
+            name: "arc-setup",
+            targets: ["arc-setup"]
+        )
+    ],
+    dependencies: [
+        // Stencil para templates (futuro)
+        // .package(url: "https://github.com/stencilproject/Stencil.git", from: "0.15.0")
     ],
     targets: [
+        // Target principal
         .target(
             name: "ARCDevTools",
-            path: "Sources"
+            dependencies: [],
+            resources: [
+                .copy("Resources")
+            ]
         ),
+
+        // Target ejecutable para setup
+        .executableTarget(
+            name: "arc-setup",
+            dependencies: ["ARCDevTools"]
+        ),
+
+        // Tests
         .testTarget(
             name: "ARCDevToolsTests",
-            dependencies: ["ARCDevTools"],
-            path: "Tests"
+            dependencies: ["ARCDevTools"]
         )
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

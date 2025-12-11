@@ -1,0 +1,41 @@
+import Foundation
+import Observation
+
+@MainActor
+@Observable
+final class {{ feature }}ViewModel {
+
+    // MARK: - State
+
+    enum State: Equatable {
+        case idle
+        case loading
+        case loaded
+        case error(String)
+    }
+
+    private(set) var state: State = .idle
+
+    // MARK: - Dependencies
+
+    private let service: {{ feature }}Service
+
+    // MARK: - Initialization
+
+    init(service: {{ feature }}Service = {{ feature }}ServiceImpl()) {
+        self.service = service
+    }
+
+    // MARK: - Actions
+
+    func load() async {
+        state = .loading
+
+        do {
+            try await service.load()
+            state = .loaded
+        } catch {
+            state = .error(error.localizedDescription)
+        }
+    }
+}
