@@ -1,12 +1,12 @@
 # ARCDevTools SwiftLint Configuration
 # Version: 1.0.0
 
-# Directorios incluidos
+# Included directories
 included:
   - Sources
   - Tests
 
-# Directorios excluidos
+# Excluded directories
 excluded:
   - .build
   - DerivedData
@@ -15,28 +15,58 @@ excluded:
   - "*/Generated/*"
   - "*.generated.swift"
 
-# Reglas deshabilitadas
+# Disabled rules
 disabled_rules:
-  - trailing_whitespace  # SwiftFormat lo maneja
-  - todo                 # Permitimos TODOs
+  - trailing_whitespace  # SwiftFormat handles this
+  - todo                 # We allow TODOs
 
-# Reglas opt-in (activar explícitamente)
+# Opt-in rules (explicitly enabled per ARCAgentsDocs)
 opt_in_rules:
+  # Already enabled (keep these)
   - empty_count
   - sorted_imports
   - closure_spacing
   - explicit_init
   - redundant_type_annotation
-  - unused_import
-  - unused_declaration
   - vertical_whitespace_closing_braces
   - vertical_whitespace_opening_braces
 
-# Configuración de umbrales
-warning_threshold: 10
-error_threshold: 50
+  # New rules from ARCAgentsDocs code-style.md
+  - array_init
+  - attributes
+  - closure_end_indentation
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - discouraged_object_literal
+  - empty_string
+  - fatal_error_message
+  - first_where
+  - flatmap_over_map_reduce
+  - force_unwrapping
+  - implicit_return
+  - joined_default_parameter
+  - last_where
+  - literal_expression_end_indentation
+  - multiline_arguments
+  - multiline_function_chains
+  - multiline_literal_brackets
+  - multiline_parameters
+  - operator_usage_whitespace
+  - overridden_super_call
+  - prefer_self_type_over_type_of_self
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - yoda_condition
 
-# Configuración por regla
+# Analyzer rules (require 'swiftlint analyze')
+analyzer_rules:
+  - unused_import
+  - unused_declaration
+
+# Rule-specific configuration
 
 identifier_name:
   min_length: 2
@@ -75,31 +105,52 @@ file_length:
   warning: 500
   error: 1000
 
-# Reglas personalizadas ARC Labs
+# Custom rules for ARC Labs
 custom_rules:
 
-  # ViewModels deben usar @Observable
+  # ViewModels should use @Observable
   observable_viewmodel:
     name: "ViewModels should use @Observable"
     regex: "final\\s+class\\s+\\w+ViewModel(?!.*@Observable)"
-    message: "ViewModels deben usar @Observable en Swift 6"
+    message: "ViewModels must use @Observable in Swift 6"
     severity: warning
 
-  # Evitar force unwrap en producción
+  # Avoid force unwrap in production
   force_unwrap_production:
     name: "Avoid force unwrap"
     regex: "(?<!// )\\!(?!\\s*//)"
     match_kinds:
       - identifier
-    message: "Evita force unwrap (!), usa guard let o if let"
+    message: "Avoid force unwrap (!), use guard let or if let"
     severity: warning
 
-  # Print statements en código (solo warnings en dev)
+  # Print statements in code (warnings only in dev)
   print_statement:
     name: "Print for debugging only"
     regex: "print\\("
-    message: "Reemplaza print() con os.Logger en producción"
+    message: "Replace print() with os.Logger in production"
     severity: warning
 
-# Reporter (formato de salida)
+  # No empty line after guard (from ARCAgentsDocs)
+  no_empty_line_after_guard:
+    name: "No Empty Line After Guard"
+    regex: 'guard\s+.+\{\s*\n\s*\n'
+    message: "Remove empty line after guard statement"
+    severity: warning
+
+  # No force cast (from ARCAgentsDocs)
+  no_force_cast:
+    name: "No Force Cast"
+    regex: 'as!'
+    message: "Avoid force casting. Use conditional cast (as?) instead"
+    severity: error
+
+  # No force try (from ARCAgentsDocs)
+  no_force_try:
+    name: "No Force Try"
+    regex: 'try!'
+    message: "Avoid force try. Use proper error handling"
+    severity: error
+
+# Reporter (output format)
 reporter: "xcode"

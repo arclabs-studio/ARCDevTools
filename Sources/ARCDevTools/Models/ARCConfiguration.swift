@@ -9,7 +9,6 @@ import Foundation
 
 /// Centralized configuration for ARC Labs standards
 public struct ARCConfiguration: Codable, Sendable {
-
     // MARK: - Lint Rules
 
     public struct LintRules: Codable, Sendable {
@@ -61,7 +60,8 @@ public struct ARCConfiguration: Codable, Sendable {
     /// Loads configuration from file or uses default
     public static func load(from url: URL) -> ARCConfiguration {
         guard let data = try? Data(contentsOf: url),
-              let config = try? JSONDecoder().decode(ARCConfiguration.self, from: data) else {
+              let config = try? JSONDecoder().decode(ARCConfiguration.self, from: data)
+        else {
             return .default
         }
         return config

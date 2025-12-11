@@ -10,7 +10,6 @@ import Foundation
 /// Public API for ARCDevTools
 @available(macOS 13.0, iOS 17.0, *)
 public enum ARCDevTools {
-
     /// Package version
     public static let version = "1.0.0"
 

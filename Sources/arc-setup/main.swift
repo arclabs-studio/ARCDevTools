@@ -5,8 +5,8 @@
 //  Created by ARC Labs Studio on 11/12/2024.
 //
 
-import Foundation
 import ARCDevTools
+import Foundation
 
 @main
 struct ARCSetup {
@@ -100,48 +100,48 @@ struct ARCSetup {
         print("\n📄 Generando Makefile...")
 
         let makefileContent = """
-# ARCDevTools Makefile
-# Generado automáticamente - No editar manualmente
+        # ARCDevTools Makefile
+        # Generado automáticamente - No editar manualmente
 
-.PHONY: help lint format fix setup clean
+        .PHONY: help lint format fix setup clean
 
-help:
-\t@echo "ARCDevTools - Comandos disponibles:"
-\t@echo "  make lint      - Ejecutar SwiftLint"
-\t@echo "  make format    - Ejecutar SwiftFormat (dry-run)"
-\t@echo "  make fix       - Aplicar SwiftFormat"
-\t@echo "  make setup     - Re-instalar hooks y configs"
-\t@echo "  make clean     - Limpiar build artifacts"
+        help:
+        \t@echo "ARCDevTools - Comandos disponibles:"
+        \t@echo "  make lint      - Ejecutar SwiftLint"
+        \t@echo "  make format    - Ejecutar SwiftFormat (dry-run)"
+        \t@echo "  make fix       - Aplicar SwiftFormat"
+        \t@echo "  make setup     - Re-instalar hooks y configs"
+        \t@echo "  make clean     - Limpiar build artifacts"
 
-lint:
-\t@if command -v swiftlint >/dev/null 2>&1; then \\
-\t\tswiftlint lint --config .swiftlint.yml; \\
-\telse \\
-\t\techo "⚠️  SwiftLint no instalado: brew install swiftlint"; \\
-\tfi
+        lint:
+        \t@if command -v swiftlint >/dev/null 2>&1; then \\
+        \t\tswiftlint lint --config .swiftlint.yml; \\
+        \telse \\
+        \t\techo "⚠️  SwiftLint no instalado: brew install swiftlint"; \\
+        \tfi
 
-format:
-\t@if command -v swiftformat >/dev/null 2>&1; then \\
-\t\tswiftformat --config .swiftformat --lint .; \\
-\telse \\
-\t\techo "⚠️  SwiftFormat no instalado: brew install swiftformat"; \\
-\tfi
+        format:
+        \t@if command -v swiftformat >/dev/null 2>&1; then \\
+        \t\tswiftformat --config .swiftformat --lint .; \\
+        \telse \\
+        \t\techo "⚠️  SwiftFormat no instalado: brew install swiftformat"; \\
+        \tfi
 
-fix:
-\t@if command -v swiftformat >/dev/null 2>&1; then \\
-\t\tswiftformat --config .swiftformat .; \\
-\telse \\
-\t\techo "⚠️  SwiftFormat no instalado: brew install swiftformat"; \\
-\tfi
+        fix:
+        \t@if command -v swiftformat >/dev/null 2>&1; then \\
+        \t\tswiftformat --config .swiftformat .; \\
+        \telse \\
+        \t\techo "⚠️  SwiftFormat no instalado: brew install swiftformat"; \\
+        \tfi
 
-setup:
-\t@swift run arc-setup
+        setup:
+        \t@swift run arc-setup
 
-clean:
-\t@rm -rf .build DerivedData
-\t@echo "✓ Build artifacts eliminados"
+        clean:
+        \t@rm -rf .build DerivedData
+        \t@echo "✓ Build artifacts eliminados"
 
-"""
+        """
 
         let makefileDest = projectDir.appendingPathComponent("Makefile")
         try makefileContent.write(to: makefileDest, atomically: true, encoding: .utf8)
