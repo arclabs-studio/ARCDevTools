@@ -242,6 +242,6 @@ Proprietary © 2025 ARC Labs Studio
 
 <div align="center">
 
-Made with ❤️ by ARC Labs Studio
+Made with 💛 by ARC Labs Studio
 
 </div>
