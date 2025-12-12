@@ -2,7 +2,7 @@
 //  main.swift
 //  ARCDevTools
 //
-//  Created by ARC Labs Studio on 11/12/2024.
+//  Created by ARC Labs Studio on 11/12/2025.
 //
 
 import ARCDevTools
@@ -68,32 +68,37 @@ struct ARCSetup {
     }
 
     static func setupGitHooks(to projectDir: URL) throws {
-        print("\n🪝 Instalando git hooks...")
+        print("\n🪝 Installing git hooks...")
 
         let gitHooksDir = projectDir.appendingPathComponent(".git/hooks")
 
         guard FileManager.default.fileExists(atPath: gitHooksDir.path) else {
-            print("   ⚠️  No se encontró .git/hooks (¿es un repo git?)")
+            print("   ⚠️  .git/hooks not found (is this a git repo?)")
             return
         }
 
         guard let scriptsDir = ARCDevTools.scriptsDirectory else {
-            print("   ❌ No se encontraron scripts en el package")
+            print("   ❌ Scripts directory not found")
             return
         }
 
+        // Install pre-commit hook
         let preCommitSource = scriptsDir.appendingPathComponent("pre-commit")
-
-        guard FileManager.default.fileExists(atPath: preCommitSource.path) else {
-            print("   ❌ No se encontró pre-commit script")
-            return
+        if FileManager.default.fileExists(atPath: preCommitSource.path) {
+            let preCommitDest = gitHooksDir.appendingPathComponent("pre-commit")
+            try ARCDevTools.copyResource(from: preCommitSource, to: preCommitDest)
+            try ARCDevTools.makeExecutable(preCommitDest)
+            print("   ✓ pre-commit hook installed")
         }
 
-        let preCommitDest = gitHooksDir.appendingPathComponent("pre-commit")
-        try ARCDevTools.copyResource(from: preCommitSource, to: preCommitDest)
-        try ARCDevTools.makeExecutable(preCommitDest)
-
-        print("   ✓ pre-commit hook instalado")
+        // Install pre-push hook
+        let prePushSource = scriptsDir.appendingPathComponent("pre-push")
+        if FileManager.default.fileExists(atPath: prePushSource.path) {
+            let prePushDest = gitHooksDir.appendingPathComponent("pre-push")
+            try ARCDevTools.copyResource(from: prePushSource, to: prePushDest)
+            try ARCDevTools.makeExecutable(prePushDest)
+            print("   ✓ pre-push hook installed")
+        }
     }
 
     static func generateMakefile(to projectDir: URL) throws {

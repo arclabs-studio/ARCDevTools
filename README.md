@@ -234,7 +234,7 @@ ARCDevTools is an internal package for ARC Labs Studio. Contributions from team 
 
 ## 📄 License
 
-Proprietary © 2024 ARC Labs Studio
+Proprietary © 2025 ARC Labs Studio
 
 ---
 

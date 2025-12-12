@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# ARCDevTools Pre-push Hook
+# Runs tests before pushing to remote
+
+echo "🚀 Pre-push: Running tests..."
+
+# Run Swift tests
+swift test --parallel
+
+# Capture exit code
+TEST_EXIT_CODE=$?
+
+if [ $TEST_EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "❌ Tests failed. Push aborted."
+    echo "💡 Fix failing tests or use --no-verify to bypass (not recommended)"
+    exit 1
+fi
+
+echo "✅ All tests passed. Proceeding with push."
+exit 0
