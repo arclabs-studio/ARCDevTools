@@ -1,31 +1,49 @@
-// swift-tools-version: 5.9
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+// swift-tools-version: 6.0
 
 import PackageDescription
 
 let package = Package(
     name: "ARCDevTools",
     platforms: [
-        .iOS(.v14),
-        .macOS(.v11),
-        .tvOS(.v14),
-        .watchOS(.v7)
+        .macOS(.v13),
+        .iOS(.v17)
     ],
     products: [
+        // Librería principal
         .library(
             name: "ARCDevTools",
             targets: ["ARCDevTools"]
         ),
+        // Ejecutable para setup
+        .executable(
+            name: "arc-setup",
+            targets: ["arc-setup"]
+        )
+    ],
+    dependencies: [
+        .package(url: "https://github.com/arclabs-studio/ARCAgentsDocs.git", from: "1.0.0"),
     ],
     targets: [
+        // Target principal
         .target(
             name: "ARCDevTools",
-            path: "Sources"
+            dependencies: [],
+            resources: [
+                .copy("Resources")
+            ]
         ),
+
+        // Target ejecutable para setup
+        .executableTarget(
+            name: "arc-setup",
+            dependencies: ["ARCDevTools"]
+        ),
+
+        // Tests
         .testTarget(
             name: "ARCDevToolsTests",
-            dependencies: ["ARCDevTools"],
-            path: "Tests"
+            dependencies: ["ARCDevTools"]
         )
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

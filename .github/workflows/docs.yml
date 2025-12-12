@@ -1,0 +1,51 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-docs:
+    name: Build DocC Documentation
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+
+      - name: Build documentation
+        run: |
+          swift package generate-documentation \
+            --target ARCDevTools \
+            --output-path ./docs
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/
+          retention-days: 30
+
+  # Uncomment to publish to GitHub Pages
+  # publish-docs:
+  #   name: Publish to GitHub Pages
+  #   needs: build-docs
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #
+  #   steps:
+  #     - name: Download documentation
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: documentation
+  #         path: docs/
+  #
+  #     - name: Deploy to GitHub Pages
+  #       uses: peaceiris/actions-gh-pages@v3
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         publish_dir: ./docs
