@@ -1,15 +1,15 @@
 # ARCDevTools SwiftFormat Configuration
 # Version: 1.0.0
 
-# Indentación
+# Indentation
 --indent 4
 --tabwidth 4
 --xcodeindentation enabled
 
-# Ancho de línea
+# Line width
 --maxwidth 120
 
-# Estilo de llaves
+# Brace style
 --allman false
 --wraparguments before-first
 --wrapparameters before-first
@@ -20,7 +20,7 @@
 --importgrouping testable-bottom
 --stripunusedargs always
 
-# Espaciado
+# Spacing
 --trimwhitespace always
 --commas always
 --semicolons inline
@@ -29,21 +29,20 @@
 --linebreaks lf
 
 # Self
---self insert
---selfrequired
+--self remove
 
 # Wrapping
 --wrapternary before-operators
 
-# Organización
+# Organization
 --organizetypes actor,class,enum,struct
 --structthreshold 0
---classtreshold 0
+--class-threshold 0
 --enumthreshold 0
 
-# Swift 6 específico
+# Swift 6 specific
 --marktypes always
 --extensionacl on-declarations
 
-# Excluir
+# Exclude
 --exclude .build,DerivedData,Pods,Carthage,Generated

@@ -21,8 +21,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        // Stencil para templates (futuro)
-        // .package(url: "https://github.com/stencilproject/Stencil.git", from: "0.15.0")
+        .package(url: "https://github.com/arclabs-studio/ARCAgentsDocs.git", from: "1.0.0"),
     ],
     targets: [
         // Target principal
