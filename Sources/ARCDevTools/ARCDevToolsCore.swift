@@ -154,12 +154,12 @@ public enum ARCDevTools {
 
         // Create parent directory if it doesn't exist
         let parentDir = destination.deletingLastPathComponent()
-        if !fileManager.fileExists(atPath: parentDir.path) {
+        if !fileManager.fileExists(atPath: parentDir.path()) {
             try fileManager.createDirectory(at: parentDir, withIntermediateDirectories: true)
         }
 
         // Copy file
-        if fileManager.fileExists(atPath: destination.path) {
+        if fileManager.fileExists(atPath: destination.path()) {
             try fileManager.removeItem(at: destination)
         }
         try fileManager.copyItem(at: source, to: destination)

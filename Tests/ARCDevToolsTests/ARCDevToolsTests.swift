@@ -11,7 +11,6 @@ import Testing
 
 @Suite("ARCDevTools Core Tests")
 struct ARCDevToolsTests {
-    
     // MARK: Version Tests
 
     @Test("Version is correct")

@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated all documentation to remove template references
   - **Reason:** Templates didn't match desired format; users can implement their own scaffolding
 
+### Fixed
+- **SwiftLint configuration** - Removed overly aggressive custom rules
+  - Disabled `sorted_imports` rule to allow `@testable import` at the end
+  - Removed custom `force_unwrap_production` rule (was detecting `!` in logical negations and comparisons)
+  - Removed custom `print_statement` rule (legitimate for CLI tools like arc-setup)
+  - Keep using built-in `force_unwrapping` rule which is more intelligent
+
 ### Planned
 - Custom `.arcconfig.json` configuration support
 - Swift Macros for reducing boilerplate
