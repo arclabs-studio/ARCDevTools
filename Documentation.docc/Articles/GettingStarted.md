@@ -74,9 +74,8 @@ The setup tool will:
 
 1. ✅ Copy `.swiftlint.yml` configuration to your project
 2. ✅ Copy `.swiftformat` configuration to your project
-3. ✅ Install pre-commit git hook (if `.git/` exists)
+3. ✅ Install pre-commit and pre-push git hooks (if `.git/` exists)
 4. ✅ Generate a `Makefile` with useful commands
-5. ✅ Optionally copy code templates
 
 ## Verify Installation
 

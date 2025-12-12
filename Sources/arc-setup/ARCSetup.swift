@@ -36,9 +36,6 @@ struct ARCSetup {
         // 4. Generar Makefile
         try generateMakefile(to: currentDir)
 
-        // 5. Crear directorio de templates (opcional)
-        try setupTemplates(to: currentDir)
-
         print("\n✅ ARCDevTools configurado correctamente")
         print("\n📝 Próximos pasos:")
         print("   1. Ejecuta: make lint")
@@ -152,25 +149,6 @@ struct ARCSetup {
         try makefileContent.write(to: makefileDest, atomically: true, encoding: .utf8)
 
         print("   ✓ Makefile generado")
-    }
-
-    static func setupTemplates(to projectDir: URL) throws {
-        print("\n📋 Configurando templates...")
-
-        let templatesDir = projectDir.appendingPathComponent("ARCTemplates")
-
-        if FileManager.default.fileExists(atPath: templatesDir.path) {
-            print("   ⚠️  ARCTemplates/ ya existe, omitiendo...")
-            return
-        }
-
-        guard let source = ARCDevTools.templatesDirectory else {
-            print("   ❌ No se encontraron templates")
-            return
-        }
-
-        try FileManager.default.copyItem(at: source, to: templatesDir)
-        print("   ✓ Templates copiados a ARCTemplates/")
     }
 }
 

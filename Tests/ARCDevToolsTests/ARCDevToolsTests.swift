@@ -65,21 +65,6 @@ struct ARCDevToolsTests {
         }
     }
 
-    // MARK: Templates Directory Tests
-
-    @Test("Templates directory exists")
-    func templatesDirectoryExists() {
-        let templatesDir = ARCDevTools.templatesDirectory
-        #expect(templatesDir != nil, "Templates directory should exist")
-
-        if let url = templatesDir {
-            var isDirectory: ObjCBool = false
-            let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
-            #expect(exists, "Templates directory should exist at path")
-            #expect(isDirectory.boolValue, "Templates path should be a directory")
-        }
-    }
-
     // MARK: Utilities Tests
 
     @Test("Copy resource creates destination")

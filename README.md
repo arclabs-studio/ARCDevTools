@@ -9,7 +9,7 @@
 
 **Centralized quality tooling and standards for ARC Labs Studio**
 
-Quality automation • Code formatting • Linting • Git hooks • Templates
+Quality automation • Code formatting • Linting • Git hooks
 
 </div>
 
@@ -17,16 +17,15 @@ Quality automation • Code formatting • Linting • Git hooks • Templates
 
 ## 🎯 Overview
 
-ARCDevTools is a Swift package that provides standardized development tooling for all ARC Labs projects. It bundles SwiftLint and SwiftFormat configurations, pre-commit hooks, code templates, and automation scripts to ensure consistency and reduce configuration drift across the ecosystem.
+ARCDevTools is a Swift package that provides standardized development tooling for all ARC Labs projects. It bundles SwiftLint and SwiftFormat configurations, pre-commit and pre-push hooks, and automation scripts to ensure consistency and reduce configuration drift across the ecosystem.
 
 ### Key Features
 
 - ✅ **Pre-configured SwiftLint** - Comprehensive linting rules aligned with ARC Labs standards
 - ✅ **Pre-configured SwiftFormat** - Automatic code formatting with consistent style
-- ✅ **Git Hooks** - Automated quality checks on commit
+- ✅ **Git Hooks** - Automated quality checks on commit and push
 - ✅ **Project Setup** - One-command setup for new and existing projects
 - ✅ **Makefile Generation** - Convenient commands for common tasks
-- ✅ **Code Templates** - Scaffolding for common patterns
 
 ---
 
@@ -75,9 +74,8 @@ swift run arc-setup
 This will install:
 - `.swiftlint.yml` configuration
 - `.swiftformat` configuration
-- Pre-commit git hook
+- Pre-commit and pre-push git hooks
 - `Makefile` with useful commands
-- Code templates (optional)
 
 ---
 
@@ -107,7 +105,6 @@ let swiftformatConfig = ARCDevTools.swiftformatConfig
 
 // Access resource directories
 let scripts = ARCDevTools.scriptsDirectory
-let templates = ARCDevTools.templatesDirectory
 
 // Copy resources
 try ARCDevTools.copyResource(from: source, to: destination)
@@ -194,8 +191,7 @@ ARCDevTools/
 │   │   │   └── ARCConfiguration.swift # Configuration model
 │   │   └── Resources/
 │   │       ├── Configs/               # SwiftLint & SwiftFormat
-│   │       ├── Scripts/               # Git hooks & automation
-│   │       └── Templates/             # Code generation templates
+│   │       └── Scripts/               # Git hooks & automation
 │   └── arc-setup/
 │       └── main.swift                 # Setup executable
 └── Tests/

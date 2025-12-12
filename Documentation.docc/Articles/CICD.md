@@ -152,16 +152,7 @@ ls -la .github/workflows/
 # docs.yml
 ```
 
-If the workflows don't exist, ARCDevTools has them in:
-```
-Sources/ARCDevTools/Resources/Templates/GitHub/workflows/
-```
-
-You can copy them manually:
-```bash
-mkdir -p .github/workflows
-cp path/to/ARCDevTools/Templates/GitHub/workflows/*.yml .github/workflows/
-```
+If the workflows don't exist, you'll need to create them manually following the examples provided in the ARCDevTools documentation or reference the workflows from successful ARCDevTools-based projects.
 
 ### Step 2: Push to GitHub
 

@@ -50,29 +50,14 @@ import ARCDevTools
 
 if let scriptsDir = ARCDevTools.scriptsDirectory {
     let preCommitHook = scriptsDir.appendingPathComponent("pre-commit")
+    let prePushHook = scriptsDir.appendingPathComponent("pre-push")
 
     if FileManager.default.fileExists(atPath: preCommitHook.path) {
         print("Found pre-commit hook at: \(preCommitHook.path)")
     }
-}
-```
 
-### Templates Directory
-
-Access code generation templates:
-
-```swift
-import ARCDevTools
-
-if let templatesDir = ARCDevTools.templatesDirectory {
-    // List all templates
-    let templates = try FileManager.default.contentsOfDirectory(
-        at: templatesDir,
-        includingPropertiesForKeys: nil
-    )
-
-    for template in templates {
-        print("Template: \(template.lastPathComponent)")
+    if FileManager.default.fileExists(atPath: prePushHook.path) {
+        print("Found pre-push hook at: \(prePushHook.path)")
     }
 }
 ```

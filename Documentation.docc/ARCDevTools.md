@@ -4,16 +4,15 @@ Centralized quality automation and development tooling for ARC Labs Studio.
 
 ## Overview
 
-ARCDevTools is a Swift package that provides standardized development tooling for all ARC Labs projects. It bundles SwiftLint and SwiftFormat configurations, pre-commit hooks, code templates, and automation scripts to ensure consistency and reduce configuration drift across the entire ecosystem.
+ARCDevTools is a Swift package that provides standardized development tooling for all ARC Labs projects. It bundles SwiftLint and SwiftFormat configurations, pre-commit hooks, and automation scripts to ensure consistency and reduce configuration drift across the entire ecosystem.
 
 ### Key Features
 
 - **Pre-configured SwiftLint** - Comprehensive linting rules aligned with ARC Labs standards
 - **Pre-configured SwiftFormat** - Automatic code formatting with consistent style
-- **Git Hooks** - Automated quality checks on commit
+- **Git Hooks** - Automated quality checks on commit and push
 - **Project Setup** - One-command setup for new and existing projects
 - **Makefile Generation** - Convenient commands for common tasks
-- **Code Templates** - Scaffolding for common patterns
 
 ## Topics
 
@@ -29,7 +28,6 @@ ARCDevTools is a Swift package that provides standardized development tooling fo
 - ``ARCDevTools/swiftlintConfig``
 - ``ARCDevTools/swiftformatConfig``
 - ``ARCDevTools/scriptsDirectory``
-- ``ARCDevTools/templatesDirectory``
 
 ### Utilities
 

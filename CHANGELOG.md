@@ -9,8 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **Templates system** - Removed all code generation templates and related functionality
+  - Deleted `Sources/ARCDevTools/Resources/Templates/` directory
+  - Removed `templatesDirectory` property from public API
+  - Removed `setupTemplates` function from arc-setup
+  - Removed templates-related tests
+  - Updated all documentation to remove template references
+  - **Reason:** Templates didn't match desired format; users can implement their own scaffolding
+
 ### Planned
-- `arc-generate` command for feature scaffolding from CLI
 - Custom `.arcconfig.json` configuration support
 - Swift Macros for reducing boilerplate
 

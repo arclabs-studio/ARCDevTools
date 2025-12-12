@@ -10,7 +10,7 @@ import Foundation
 /// Public API for ARCDevTools quality automation package.
 ///
 /// ARCDevTools provides centralized access to SwiftLint configurations, SwiftFormat rules,
-/// automation scripts, and code templates for ARC Labs Studio projects.
+/// and automation scripts for ARC Labs Studio projects.
 ///
 /// ## Overview
 ///
@@ -43,7 +43,6 @@ import Foundation
 /// - ``swiftlintConfig``
 /// - ``swiftformatConfig``
 /// - ``scriptsDirectory``
-/// - ``templatesDirectory``
 ///
 /// ### Utility Functions
 ///
@@ -62,7 +61,7 @@ public enum ARCDevTools {
 
     /// The module's resource bundle.
     ///
-    /// Provides access to bundled resources including configurations, scripts, and templates.
+    /// Provides access to bundled resources including configurations and scripts.
     /// Most of the time you'll use the specific properties like ``swiftlintConfig``
     /// instead of accessing the bundle directly.
     public static var bundle: Bundle {
@@ -124,26 +123,6 @@ public enum ARCDevTools {
     /// - Returns: URL to the scripts directory, or `nil` if not found.
     public static var scriptsDirectory: URL? {
         bundle.url(forResource: "Scripts", withExtension: nil, subdirectory: "Resources")
-    }
-
-    /// URL to the templates directory.
-    ///
-    /// Contains code generation templates for common patterns and structures.
-    ///
-    /// ## Example Usage
-    ///
-    /// ```swift
-    /// if let templatesDir = ARCDevTools.templatesDirectory {
-    ///     let templates = try FileManager.default.contentsOfDirectory(at: templatesDir)
-    ///     for template in templates {
-    ///         print("Found template: \(template.lastPathComponent)")
-    ///     }
-    /// }
-    /// ```
-    ///
-    /// - Returns: URL to the templates directory, or `nil` if not found.
-    public static var templatesDirectory: URL? {
-        bundle.url(forResource: "Templates", withExtension: nil, subdirectory: "Resources")
     }
 
     // MARK: - Utilities
