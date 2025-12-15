@@ -159,7 +159,7 @@ ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to
 
 ### Breaking Changes
 
-⚠️ **From 0.1.0:**
+⚠️ **Breaking changes in v1.0.0:**
 
 1. **Testing Framework Change**
    - Tests now use Swift Testing instead of XCTest
@@ -173,7 +173,7 @@ ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to
 
 ### Migration Guide
 
-If upgrading from 0.1.0:
+If upgrading to v1.0.0:
 
 ```bash
 # 1. Update configurations
@@ -191,37 +191,6 @@ swift test
 
 ---
 
-## [0.1.0] - 2025-11-14
-
-### Added
-
-- 🎉 Initial ARCDevTools release
-- ✅ SwiftLint and SwiftFormat configurations
-- ✅ Shell scripts for lint, format, and git hooks
-- ✅ Stencil templates for Features (View, ViewModel, Service)
-- ✅ Unit test templates
-- ✅ `arc-setup` executable for automatic configuration
-- ✅ Automatic Makefile generation
-- ✅ Pre-commit hooks for code validation
-- ✅ Swift 6.0 support
-- ✅ Basic documentation
-
-### Features
-
-- Public API via `ARCDevTools` enum
-- Resource access via `Bundle.module`
-- Configuration copy utilities
-- Extensible configuration with `ARCConfiguration`
-
-### Standards
-
-- MVVM + Clean Architecture
-- Swift 6 strict concurrency
-- `@Observable` for ViewModels
-- Protocol-oriented design
-
----
-
 ## Links
 
 - **Repository**: https://github.com/arclabs-studio/ARCDevTools
@@ -232,4 +201,3 @@ swift test
 
 [Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/arclabs-studio/ARCDevTools/releases/tag/v1.0.0
-[0.1.0]: https://github.com/arclabs-studio/ARCDevTools/releases/tag/v0.1.0
