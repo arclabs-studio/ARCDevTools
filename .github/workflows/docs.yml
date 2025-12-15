@@ -28,11 +28,18 @@ jobs:
           # Find and copy the generated .doccarchive
           find ./DerivedData -name "ARCDevTools.doccarchive" -exec cp -R {} ./docs \;
 
+      - name: Create documentation archive
+        run: |
+          # Create zip to avoid issues with special characters in filenames
+          cd docs
+          zip -r ../documentation.zip ARCDevTools.doccarchive
+          cd ..
+
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
         with:
           name: documentation
-          path: docs/
+          path: documentation.zip
           retention-days: 30
 
   publish-docs:
@@ -49,7 +56,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: documentation
-          path: docs/
+          path: ./
+
+      - name: Extract documentation
+        run: |
+          unzip documentation.zip -d docs/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

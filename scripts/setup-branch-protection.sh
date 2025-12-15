@@ -81,10 +81,12 @@ EOF
 configure_branch_protection "main" "$MAIN_CONFIG"
 
 # Configure develop branch protection
+# Note: strict: false allows pushes while status checks are in progress
+# This is necessary for the sync-develop workflow to work properly
 DEVELOP_CONFIG=$(cat <<'EOF'
 {
   "required_status_checks": {
-    "strict": true,
+    "strict": false,
     "contexts": [
       "SwiftLint",
       "SwiftFormat",
@@ -112,7 +114,10 @@ echo ""
 echo "✅ Branch protection setup complete!"
 echo ""
 echo "📝 Summary:"
-echo "  - main: Requires 1 approval + status checks + linear history"
-echo "  - develop: Requires status checks only"
+echo "  - main: Requires 1 approval + status checks (strict) + linear history"
+echo "  - develop: Requires status checks (non-strict, allows push while checks run)"
+echo ""
+echo "ℹ️  Note: develop uses 'strict: false' to allow the sync-develop workflow"
+echo "   to push changes from main even while status checks are in progress."
 echo ""
 echo "🔗 View settings: https://github.com/$REPO/settings/branches"
