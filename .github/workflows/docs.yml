@@ -25,8 +25,29 @@ jobs:
             -destination 'platform=macOS' \
             -derivedDataPath ./DerivedData
 
-          # Find and copy the generated .doccarchive
-          find ./DerivedData -name "ARCDevTools.doccarchive" -exec cp -R {} ./docs \;
+      - name: Create documentation archive
+        run: |
+          # Find the .doccarchive (more robust approach)
+          DOCC_ARCHIVE=$(find ./DerivedData -name "*.doccarchive" -type d -print -quit)
+
+          if [ -z "$DOCC_ARCHIVE" ]; then
+            echo "❌ Error: .doccarchive not found"
+            echo "Searching for any .docc files:"
+            find ./DerivedData -name "*.docc*" -ls
+            exit 1
+          fi
+
+          echo "✅ Found documentation archive: $DOCC_ARCHIVE"
+
+          # Create zip directly from the found archive location
+          ARCHIVE_DIR=$(dirname "$DOCC_ARCHIVE")
+          ARCHIVE_NAME=$(basename "$DOCC_ARCHIVE")
+
+          cd "$ARCHIVE_DIR"
+          zip -r "$GITHUB_WORKSPACE/documentation.zip" "$ARCHIVE_NAME"
+
+          echo "✅ Created documentation.zip"
+          ls -lh "$GITHUB_WORKSPACE/documentation.zip"
 
       - name: Create documentation archive
         run: |
