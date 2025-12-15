@@ -37,3 +37,19 @@ jobs:
       - name: Check formatting
         run: |
           swiftformat --config Sources/ARCDevTools/Resources/Configs/swiftformat --lint Sources/ Tests/
+
+  markdown-links:
+    name: Validate Markdown Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'no'
+          config-file: '.github/markdown-link-check-config.json'
+          check-modified-files-only: 'no'
