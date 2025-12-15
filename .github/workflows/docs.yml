@@ -30,22 +30,24 @@ jobs:
           path: docs/
           retention-days: 30
 
-  # Uncomment to publish to GitHub Pages
-  # publish-docs:
-  #   name: Publish to GitHub Pages
-  #   needs: build-docs
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main'
-  #
-  #   steps:
-  #     - name: Download documentation
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: documentation
-  #         path: docs/
-  #
-  #     - name: Deploy to GitHub Pages
-  #       uses: peaceiris/actions-gh-pages@v3
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         publish_dir: ./docs
+  publish-docs:
+    name: Publish to GitHub Pages
+    needs: build-docs
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download documentation
+        uses: actions/download-artifact@v4
+        with:
+          name: documentation
+          path: docs/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs

@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+#### Complete CI/CD Automation
+- ✅ **New GitHub Actions Workflows:**
+  - `sync-develop.yml` - Automatically syncs `main` → `develop` after merges
+    - Creates issue if conflicts occur
+    - Prevents branch divergence
+  - `validate-release.yml` - Validates tags and creates GitHub Releases
+    - Validates semver format (vX.Y.Z)
+    - Checks CHANGELOG.md entries
+    - Builds and tests release configuration
+  - `release-drafter.yml` - Auto-generates release notes from PRs
+    - Categorizes by labels (features, bugs, docs, etc.)
+    - Suggests next version number
+  - `enforce-gitflow.yml` - Validates Git Flow rules
+    - Ensures `feature/*` → `develop` only
+    - Ensures `hotfix/*` → `main` only
+    - Validates branch naming conventions
+    - Warns on non-conventional commits
+
+- ✅ **Enhanced Existing Workflows:**
+  - `quality.yml` - Added markdown link validation job
+  - `docs.yml` - Enabled GitHub Pages deployment for DocC
+
+- ✅ **Configuration Files:**
+  - `.github/PULL_REQUEST_TEMPLATE.md` - PR template with comprehensive checklist
+  - `.github/release-drafter.yml` - Release notes configuration with categorization
+  - `.github/markdown-link-check-config.json` - Link validation settings
+  - `CONTRIBUTING.md` - Complete contribution guide with:
+    - Git Flow workflow (feature → develop → main)
+    - Conventional Commits specification
+    - Pull request process
+    - CI/CD workflows explanation
+    - Troubleshooting guide
+
+- ✅ **Automation Scripts:**
+  - `scripts/setup-branch-protection.sh` - Configure branch protection rules via GitHub CLI
+  - `scripts/setup-github-labels.sh` - Create labels for Release Drafter categorization
+
+- ✅ **Documentation:**
+  - README.md updated with workflow status badges
+  - README.md added comprehensive CI/CD automation section
+  - Complete workflow documentation for all 7 automation workflows
+
 ### Removed
 - **Templates system** - Removed all code generation templates and related functionality
   - Deleted `Sources/ARCDevTools/Resources/Templates/` directory
@@ -115,7 +159,7 @@ ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to
 
 ### Breaking Changes
 
-⚠️ **From 0.1.0:**
+⚠️ **Breaking changes in v1.0.0:**
 
 1. **Testing Framework Change**
    - Tests now use Swift Testing instead of XCTest
@@ -129,7 +173,7 @@ ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to
 
 ### Migration Guide
 
-If upgrading from 0.1.0:
+If upgrading to v1.0.0:
 
 ```bash
 # 1. Update configurations
@@ -147,37 +191,6 @@ swift test
 
 ---
 
-## [0.1.0] - 2025-11-14
-
-### Added
-
-- 🎉 Initial ARCDevTools release
-- ✅ SwiftLint and SwiftFormat configurations
-- ✅ Shell scripts for lint, format, and git hooks
-- ✅ Stencil templates for Features (View, ViewModel, Service)
-- ✅ Unit test templates
-- ✅ `arc-setup` executable for automatic configuration
-- ✅ Automatic Makefile generation
-- ✅ Pre-commit hooks for code validation
-- ✅ Swift 6.0 support
-- ✅ Basic documentation
-
-### Features
-
-- Public API via `ARCDevTools` enum
-- Resource access via `Bundle.module`
-- Configuration copy utilities
-- Extensible configuration with `ARCConfiguration`
-
-### Standards
-
-- MVVM + Clean Architecture
-- Swift 6 strict concurrency
-- `@Observable` for ViewModels
-- Protocol-oriented design
-
----
-
 ## Links
 
 - **Repository**: https://github.com/arclabs-studio/ARCDevTools
@@ -188,4 +201,3 @@ swift test
 
 [Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/arclabs-studio/ARCDevTools/releases/tag/v1.0.0
-[0.1.0]: https://github.com/arclabs-studio/ARCDevTools/releases/tag/v0.1.0
