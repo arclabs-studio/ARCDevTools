@@ -19,9 +19,14 @@ jobs:
 
       - name: Build documentation
         run: |
-          swift package generate-documentation \
-            --target ARCDevTools \
-            --output-path ./docs
+          # Build DocC documentation using xcodebuild
+          xcodebuild docbuild \
+            -scheme ARCDevTools \
+            -destination 'platform=macOS' \
+            -derivedDataPath ./DerivedData
+
+          # Find and copy the generated .doccarchive
+          find ./DerivedData -name "ARCDevTools.doccarchive" -exec cp -R {} ./docs \;
 
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4

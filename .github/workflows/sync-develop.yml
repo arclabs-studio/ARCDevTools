@@ -13,6 +13,10 @@ jobs:
     name: Sync main → develop
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      issues: write
+
     # Don't run if triggered by bot to prevent loops
     if: "!contains(github.actor, '[bot]')"
 
