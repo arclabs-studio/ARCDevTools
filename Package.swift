@@ -9,12 +9,12 @@ let package = Package(
         .iOS(.v17)
     ],
     products: [
-        // Librería principal
+        // Main library
         .library(
             name: "ARCDevTools",
             targets: ["ARCDevTools"]
         ),
-        // Ejecutable para setup
+        // Setup executable
         .executable(
             name: "arc-setup",
             targets: ["arc-setup"]
@@ -24,7 +24,7 @@ let package = Package(
         .package(url: "https://github.com/arclabs-studio/ARCAgentsDocs.git", from: "1.0.0"),
     ],
     targets: [
-        // Target principal
+        // Main target
         .target(
             name: "ARCDevTools",
             dependencies: [],
@@ -33,7 +33,7 @@ let package = Package(
             ]
         ),
 
-        // Target ejecutable para setup
+        // Setup executable target
         .executableTarget(
             name: "arc-setup",
             dependencies: ["ARCDevTools"]

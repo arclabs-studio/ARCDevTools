@@ -1,14 +1,17 @@
 # 🛠️ ARCDevTools
 
-
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-macOS%20%7C%20iOS-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
 
+[![Tests](https://github.com/arclabs-studio/ARCDevTools/workflows/Tests/badge.svg)](https://github.com/arclabs-studio/ARCDevTools/actions/workflows/tests.yml)
+[![Code Quality](https://github.com/arclabs-studio/ARCDevTools/workflows/Code%20Quality/badge.svg)](https://github.com/arclabs-studio/ARCDevTools/actions/workflows/quality.yml)
+[![Documentation](https://github.com/arclabs-studio/ARCDevTools/workflows/Documentation/badge.svg)](https://github.com/arclabs-studio/ARCDevTools/actions/workflows/docs.yml)
+
 **Centralized quality tooling and standards for ARC Labs Studio**
 
-Quality automation • Code formatting • Linting • Git hooks
+Quality automation • Code formatting • Linting • Git hooks • CI/CD
 
 
 ---
@@ -216,13 +219,109 @@ All tests follow ARCAgentsDocs standards:
 
 ## 🤝 Contributing
 
-ARCDevTools is an internal package for ARC Labs Studio. Contributions from team members are welcome:
+ARCDevTools is an internal package for ARC Labs Studio. Contributions from team members are welcome.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for complete guidelines on:
+- Git Flow workflow (feature → develop → main)
+- Conventional Commits format
+- Pull request process
+- Code quality standards
+- CI/CD automation
+
+**Quick start:**
 1. Create a feature branch: `feature/your-improvement`
-2. Follow the standards defined in ARCAgentsDocs
-3. Ensure all tests pass: `swift test`
+2. Follow the standards defined in [ARCAgentsDocs](https://github.com/arclabs-studio/ARCAgentsDocs)
+3. Ensure all tests pass: `swift test --parallel`
 4. Run quality checks: `make lint && make format`
-5. Create a pull request to `main`
+5. Create a pull request to `develop`
+
+---
+
+## 🤖 CI/CD Automation
+
+ARCDevTools uses comprehensive GitHub Actions automation to ensure quality and streamline development:
+
+### Workflows
+
+#### Tests (`tests.yml`)
+- **Triggers:** Push to main/develop/feature/*, PR to main/develop
+- **Platforms:** macOS (Xcode 16) + Linux (Swift 6.0)
+- **Actions:** Build package, run all tests in parallel
+- **Purpose:** Ensure code compiles and tests pass on all platforms
+
+#### Code Quality (`quality.yml`)
+- **Triggers:** Push to main/develop/feature/*, PR to main/develop
+- **Checks:**
+  - SwiftLint (strict mode with 40+ rules)
+  - SwiftFormat (lint mode)
+  - Markdown link validation
+- **Purpose:** Enforce code style and documentation quality
+
+#### Documentation (`docs.yml`)
+- **Triggers:** Push to main, manual
+- **Actions:**
+  - Generate DocC documentation
+  - Deploy to GitHub Pages
+  - Upload artifacts (30-day retention)
+- **Purpose:** Keep documentation up-to-date and accessible
+
+#### Git Flow Enforcement (`enforce-gitflow.yml`)
+- **Triggers:** PR to main/develop
+- **Validates:**
+  - `feature/*` → `develop` only
+  - `hotfix/*` → `main` only
+  - `develop` or `hotfix/*` → `main` only
+  - Conventional commit format (warnings)
+- **Purpose:** Maintain clean branching strategy
+
+#### Sync Develop (`sync-develop.yml`)
+- **Triggers:** Push to main
+- **Actions:** Automatically merge main → develop
+- **Conflict Handling:** Creates issue if manual resolution needed
+- **Purpose:** Keep develop in sync with main
+
+#### Release Validation (`validate-release.yml`)
+- **Triggers:** Tag push (v*.*.*)
+- **Validates:**
+  - Semver tag format
+  - CHANGELOG.md entry
+  - Tag on main branch
+- **Actions:** Build release, run tests, create GitHub Release
+- **Purpose:** Ensure releases are properly formatted and tested
+
+#### Release Drafter (`release-drafter.yml`)
+- **Triggers:** Push to main, PR events
+- **Actions:** Auto-generate release notes from PRs
+- **Categorizes:** Features, bug fixes, docs, architecture, etc.
+- **Purpose:** Automated release note generation
+
+### Branch Protection
+
+Both `main` and `develop` branches are protected:
+
+**main:**
+- Requires 1 approval
+- All status checks must pass
+- Linear history required
+- No force pushes or deletions
+
+**develop:**
+- Status checks must pass
+- No force pushes or deletions
+
+### Setup Scripts
+
+After cloning, you can configure GitHub settings:
+
+```bash
+# Configure branch protection rules
+./scripts/setup-branch-protection.sh
+
+# Create labels for Release Drafter
+./scripts/setup-github-labels.sh
+```
+
+**Note:** Requires GitHub CLI (`gh`) with admin permissions.
 
 ---
 
