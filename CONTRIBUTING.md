@@ -274,7 +274,7 @@ Reviewers will check:
 
 ### Swift Style Guidelines
 
-ARCDevTools follows ARC Labs coding standards (see [ARCAgentsDocs](https://github.com/arclabs-studio/ARCAgentsDocs)):
+ARCDevTools follows ARC Labs coding standards (see [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)):
 
 **Key Rules:**
 - 4 spaces for indentation (no tabs)
@@ -494,7 +494,7 @@ git commit --no-verify -m "message"
 ### Getting Help
 
 - Check existing issues: https://github.com/arclabs-studio/ARCDevTools/issues
-- Review ARCAgentsDocs for standards: https://github.com/arclabs-studio/ARCAgentsDocs
+- Review ARCKnowledge for standards: https://github.com/arclabs-studio/ARCKnowledge
 - Ask in ARC Labs Studio team channels
 
 ---
@@ -504,7 +504,7 @@ git commit --no-verify -m "message"
 - **[Conventional Commits](https://www.conventionalcommits.org/)** - Commit message format
 - **[Git Flow](https://nvie.com/posts/a-successful-git-branching-model/)** - Branching model
 - **[Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)** - Swift best practices
-- **[ARCAgentsDocs](https://github.com/arclabs-studio/ARCAgentsDocs)** - ARC Labs standards
+- **[ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)** - ARC Labs standards
 
 ---
 

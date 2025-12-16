@@ -333,7 +333,7 @@ If you encounter issues not covered here:
 
 1. **Check the logs:** Run commands with `--verbose` flag
 2. **Verify versions:** Ensure you're using compatible tool versions
-3. **Review ARCAgentsDocs:** Check for updated guidance
+3. **Review ARCKnowledge:** Check for updated guidance
 4. **Ask the team:** Consult other ARC Labs developers
 5. **File an issue:** Report bugs on GitHub
 

@@ -48,5 +48,5 @@ ARCDevTools is a Swift package that provides standardized development tooling fo
 
 ## See Also
 
-- [ARCAgentsDocs](https://github.com/arclabs-studio/ARCAgentsDocs) - Complete development standards and guidelines
+- [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge) - Complete development standards and guidelines
 - [GitHub Repository](https://github.com/arclabs-studio/ARCDevTools)
