@@ -49,6 +49,13 @@ jobs:
           echo "✅ Created documentation.zip"
           ls -lh "$GITHUB_WORKSPACE/documentation.zip"
 
+      - name: Create documentation archive
+        run: |
+          # Create zip to avoid issues with special characters in filenames
+          cd docs
+          zip -r ../documentation.zip ARCDevTools.doccarchive
+          cd ..
+
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
         with:
