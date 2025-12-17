@@ -258,7 +258,7 @@ When customizing:
 
 1. **Document your changes** - Add comments explaining why rules were modified
 2. **Keep changes minimal** - Only override what's necessary
-3. **Align with ARCAgentsDocs** - Stay close to ARC Labs standards
+3. **Align with ARCKnowledge** - Stay close to ARC Labs standards
 4. **Team agreement** - Discuss customizations with your team
 5. **Version control** - Track configuration changes in git
 

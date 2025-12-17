@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+#### Migration to ARCKnowledge
+- ✅ **Removed ARCAgentsDocs SPM dependency** - ARCKnowledge is now added as git submodule instead
+- ✅ **Updated all references** - All documentation, comments, and configurations now reference ARCKnowledge
+  - Updated README.md, CONTRIBUTING.md, CHANGELOG.md
+  - Updated all Documentation.docc files
+  - Updated SwiftLint configuration comments
+- ✅ **Added ARCKnowledge submodule** - Available at `ARCKnowledge/` directory
+  - Run `git submodule update --init --recursive` to initialize
+
 ### Added
 
 #### Complete CI/CD Automation
@@ -79,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🎉 Production Release
 
-ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to ARCAgentsDocs standards. This release includes comprehensive quality improvements, modern testing, complete documentation, and automated CI/CD.
+ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to ARCKnowledge standards. This release includes comprehensive quality improvements, modern testing, complete documentation, and automated CI/CD.
 
 ### Added
 
@@ -87,7 +98,7 @@ ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to
 - ✅ Migrated from XCTest to **Swift Testing framework**
 - ✅ All tests use `@Test` attributes and `#expect` assertions
 - ✅ Test suites organized with `@Suite` for better structure
-- ✅ Descriptive test names following ARCAgentsDocs conventions
+- ✅ Descriptive test names following ARCKnowledge conventions
 - ✅ 100% test coverage maintained with modern syntax
 
 #### Code Quality & Linting
@@ -97,10 +108,10 @@ ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to
   - `no_force_cast` - Require safe casting with `as?`
   - `no_force_try` - Require proper error handling
 - ✅ Analyzer rules: `unused_import`, `unused_declaration`
-- ✅ All rules aligned with ARCAgentsDocs code-style.md standards
+- ✅ All rules aligned with ARCKnowledge code-style.md standards
 
 #### Code Formatting
-- ✅ SwiftFormat: Changed `--self insert` → `--self remove` (ARCAgentsDocs standard)
+- ✅ SwiftFormat: Changed `--self insert` → `--self remove` (ARCKnowledge standard)
 - ✅ Fixed configuration typo: `--classtreshold` → `--class-threshold`
 - ✅ All code formatted with updated rules
 - ✅ Consistent 4-space indentation, 120-char line width
@@ -138,7 +149,7 @@ ARCDevTools v1.0.0 marks the **production-ready** release with 100% alignment to
 - ✅ All code translated to English
 - ✅ All documentation translated to English
 - ✅ README completely rewritten
-- ✅ **100% aligned with ARCAgentsDocs**
+- ✅ **100% aligned with ARCKnowledge**
 
 ### Changed
 
@@ -194,7 +205,7 @@ swift test
 ## Links
 
 - **Repository**: https://github.com/arclabs-studio/ARCDevTools
-- **ARCAgentsDocs**: https://github.com/arclabs-studio/ARCAgentsDocs
+- **ARCKnowledge**: https://github.com/arclabs-studio/ARCKnowledge
 - **Issues**: https://github.com/arclabs-studio/ARCDevTools/issues
 
 ---

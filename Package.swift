@@ -20,9 +20,7 @@ let package = Package(
             targets: ["arc-setup"]
         )
     ],
-    dependencies: [
-        .package(url: "https://github.com/arclabs-studio/ARCAgentsDocs.git", from: "1.0.0"),
-    ],
+    dependencies: [],
     targets: [
         // Main target
         .target(

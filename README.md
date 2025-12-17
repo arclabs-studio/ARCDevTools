@@ -41,7 +41,19 @@ ARCDevTools is a Swift package that provides standardized development tooling fo
 
 ## 🚀 Installation
 
-### 1. Add Package Dependency
+### 1. Clone with Submodules
+
+ARCDevTools includes ARCKnowledge as a git submodule for development standards documentation.
+
+```bash
+# Clone with submodules
+git clone --recurse-submodules https://github.com/arclabs-studio/ARCDevTools
+
+# Or if already cloned, initialize submodules
+git submodule update --init --recursive
+```
+
+### 2. Add Package Dependency
 
 #### For Swift Packages
 
@@ -59,13 +71,13 @@ dependencies: [
 3. Select version: `1.0.0` or later
 4. **Important:** Do not add to any target (development tools only)
 
-### 2. Install Required Tools
+### 3. Install Required Tools
 
 ```bash
 brew install swiftlint swiftformat
 ```
 
-### 3. Run Setup
+### 4. Run Setup
 
 ```bash
 # From your project root
@@ -118,7 +130,7 @@ try ARCDevTools.makeExecutable(scriptURL)
 
 ## 📐 Code Style Standards
 
-ARCDevTools enforces the following standards (aligned with [ARCAgentsDocs](https://github.com/arclabs-studio/ARCAgentsDocs)):
+ARCDevTools enforces the following standards (aligned with [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)):
 
 ### SwiftFormat Configuration
 
@@ -145,7 +157,7 @@ ARCDevTools enforces the following standards (aligned with [ARCAgentsDocs](https
 - **Dependencies:** Protocol-based with dependency injection
 - **Testing:** Swift Testing framework
 
-For complete standards, see [ARCAgentsDocs](https://github.com/arclabs-studio/ARCAgentsDocs).
+For complete standards, see [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge).
 
 ---
 
@@ -210,7 +222,7 @@ ARCDevTools uses the Swift Testing framework:
 swift test
 ```
 
-All tests follow ARCAgentsDocs standards:
+All tests follow ARCKnowledge standards:
 - Descriptive test names with `@Test` attributes
 - `#expect` assertions instead of `XCTAssert*`
 - Suite organization with `@Suite` attributes
@@ -230,7 +242,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for complete guidelines on:
 
 **Quick start:**
 1. Create a feature branch: `feature/your-improvement`
-2. Follow the standards defined in [ARCAgentsDocs](https://github.com/arclabs-studio/ARCAgentsDocs)
+2. Follow the standards defined in [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)
 3. Ensure all tests pass: `swift test --parallel`
 4. Run quality checks: `make lint && make format`
 5. Create a pull request to `develop`
@@ -333,7 +345,7 @@ Proprietary © 2025 ARC Labs Studio
 
 ## 🔗 Related Resources
 
-- **[ARCAgentsDocs](https://github.com/arclabs-studio/ARCAgentsDocs)** - Complete development standards and guidelines
+- **[ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)** - Complete development standards and guidelines
 - **[SwiftLint](https://github.com/realm/SwiftLint)** - A tool to enforce Swift style and conventions
 - **[SwiftFormat](https://github.com/nicklockwood/SwiftFormat)** - Code formatting for Swift
 
