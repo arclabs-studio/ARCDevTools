@@ -1,17 +1,17 @@
-# Swift / Xcode / SwiftPM
-build/
-DerivedData/
-.swiftpm/
-.build/
-xcuserdata/
+# macOS / IDE
 .DS_Store
 .idea/
 .vscode/
-*.xcworkspace
+xcuserdata/
 *.xcuserstate
 *.log
 *.swp
 *.tmp
 *.old
+
+# Build artifacts (if testing in local projects)
+build/
+DerivedData/
+*.xcworkspace
 /Pods
 /Carthage
