@@ -33,6 +33,7 @@
 
 # Wrapping
 --wrapternary before-operators
+--wrapattributes same-line
 
 # Organization
 --organizetypes actor,class,enum,struct
