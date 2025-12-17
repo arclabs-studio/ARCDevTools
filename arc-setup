@@ -1,0 +1,325 @@
+#!/usr/bin/env swift
+//
+// ARCDevTools Setup Script
+// Version: 1.0.0
+//
+// Installs ARCDevTools configuration files, git hooks, and generates Makefile
+// for ARC Labs Studio projects.
+//
+
+import Foundation
+
+// MARK: - Constants
+
+let version = "1.0.0"
+
+// MARK: - ANSI Colors
+
+enum Color {
+    static let red = "\u{001B}[0;31m"
+    static let green = "\u{001B}[0;32m"
+    static let yellow = "\u{001B}[1;33m"
+    static let blue = "\u{001B}[0;34m"
+    static let cyan = "\u{001B}[0;36m"
+    static let reset = "\u{001B}[0m"
+}
+
+// MARK: - Utility Functions
+
+func print(_ message: String, color: String) {
+    print("\(color)\(message)\(Color.reset)")
+}
+
+func printInfo(_ message: String) {
+    print(message, color: Color.cyan)
+}
+
+func printSuccess(_ message: String) {
+    print("✓ \(message)", color: Color.green)
+}
+
+func printError(_ message: String) {
+    print("✗ \(message)", color: Color.red)
+}
+
+func printWarning(_ message: String) {
+    print("⚠ \(message)", color: Color.yellow)
+}
+
+// MARK: - Path Resolution
+
+let fileManager = FileManager.default
+let scriptURL = URL(fileURLWithPath: CommandLine.arguments[0])
+let scriptDir = scriptURL.deletingLastPathComponent()
+let projectRoot = URL(fileURLWithPath: fileManager.currentDirectoryPath)
+
+// MARK: - Setup Functions
+
+func printBanner() {
+    print("")
+    printInfo("🔧 ARCDevTools Setup v\(version)")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print("")
+}
+
+func verifyProjectRoot() throws {
+    printInfo("📂 Verifying project root...")
+
+    let hasPackageSwift = fileManager.fileExists(
+        atPath: projectRoot.appendingPathComponent("Package.swift").path
+    )
+
+    let contents = (try? fileManager.contentsOfDirectory(atPath: projectRoot.path)) ?? []
+    let hasXcodeProject = contents.contains { $0.hasSuffix(".xcodeproj") }
+
+    guard hasPackageSwift || hasXcodeProject else {
+        printError("No Package.swift or .xcodeproj detected")
+        printError("Run this script from your project root directory")
+        throw SetupError.invalidProjectRoot
+    }
+
+    if hasPackageSwift {
+        printSuccess("Swift Package detected")
+    } else {
+        printSuccess("Xcode Project detected")
+    }
+}
+
+func setupConfigs() throws {
+    print("")
+    printInfo("📦 Copying configurations...")
+
+    // SwiftLint
+    let swiftlintSource = scriptDir.appendingPathComponent("configs/swiftlint.yml")
+    if fileManager.fileExists(atPath: swiftlintSource.path) {
+        let dest = projectRoot.appendingPathComponent(".swiftlint.yml")
+        try? fileManager.removeItem(at: dest) // Remove if exists
+        try fileManager.copyItem(at: swiftlintSource, to: dest)
+        printSuccess("   .swiftlint.yml")
+    } else {
+        printWarning("   swiftlint.yml not found in ARCDevTools")
+    }
+
+    // SwiftFormat
+    let swiftformatSource = scriptDir.appendingPathComponent("configs/swiftformat")
+    if fileManager.fileExists(atPath: swiftformatSource.path) {
+        let dest = projectRoot.appendingPathComponent(".swiftformat")
+        try? fileManager.removeItem(at: dest) // Remove if exists
+        try fileManager.copyItem(at: swiftformatSource, to: dest)
+        printSuccess("   .swiftformat")
+    } else {
+        printWarning("   swiftformat not found in ARCDevTools")
+    }
+}
+
+func setupGitHooks() throws {
+    print("")
+    printInfo("🪝 Installing git hooks...")
+
+    let gitHooksDir = projectRoot.appendingPathComponent(".git/hooks")
+
+    guard fileManager.fileExists(atPath: gitHooksDir.path) else {
+        printWarning("   .git/hooks not found (is this a git repository?)")
+        return
+    }
+
+    // Pre-commit hook
+    let preCommitSource = scriptDir.appendingPathComponent("hooks/pre-commit")
+    if fileManager.fileExists(atPath: preCommitSource.path) {
+        let preCommitDest = gitHooksDir.appendingPathComponent("pre-commit")
+        try? fileManager.removeItem(at: preCommitDest)
+        try fileManager.copyItem(at: preCommitSource, to: preCommitDest)
+        try makeExecutable(preCommitDest)
+        printSuccess("   pre-commit hook installed")
+    }
+
+    // Pre-push hook
+    let prePushSource = scriptDir.appendingPathComponent("hooks/pre-push")
+    if fileManager.fileExists(atPath: prePushSource.path) {
+        let prePushDest = gitHooksDir.appendingPathComponent("pre-push")
+        try? fileManager.removeItem(at: prePushDest)
+        try fileManager.copyItem(at: prePushSource, to: prePushDest)
+        try makeExecutable(prePushDest)
+        printSuccess("   pre-push hook installed")
+    }
+}
+
+func makeExecutable(_ url: URL) throws {
+    let attributes = [FileAttributeKey.posixPermissions: 0o755]
+    try fileManager.setAttributes(attributes, ofItemAtPath: url.path)
+}
+
+func generateMakefile() throws {
+    print("")
+    printInfo("📄 Generating Makefile...")
+
+    let makefileContent = """
+# ARCDevTools Makefile
+# Auto-generated - Do not edit manually
+
+.PHONY: help lint format fix setup hooks clean
+
+help:
+\t@echo "ARCDevTools - Available commands:"
+\t@echo "  make lint      - Run SwiftLint"
+\t@echo "  make format    - Run SwiftFormat (dry-run)"
+\t@echo "  make fix       - Apply SwiftFormat"
+\t@echo "  make setup     - Re-install hooks and configs"
+\t@echo "  make hooks     - Re-install git hooks only"
+\t@echo "  make clean     - Clean build artifacts"
+
+lint:
+\t@if command -v swiftlint >/dev/null 2>&1; then \\
+\t\tswiftlint lint --config .swiftlint.yml; \\
+\telse \\
+\t\techo "⚠️  SwiftLint not installed: brew install swiftlint"; \\
+\tfi
+
+format:
+\t@if command -v swiftformat >/dev/null 2>&1; then \\
+\t\tswiftformat --config .swiftformat --lint .; \\
+\telse \\
+\t\techo "⚠️  SwiftFormat not installed: brew install swiftformat"; \\
+\tfi
+
+fix:
+\t@if command -v swiftformat >/dev/null 2>&1; then \\
+\t\tswiftformat --config .swiftformat .; \\
+\telse \\
+\t\techo "⚠️  SwiftFormat not installed: brew install swiftformat"; \\
+\tfi
+
+setup:
+\t@./ARCDevTools/arc-setup
+
+hooks:
+\t@./ARCDevTools/hooks/install-hooks.sh
+
+clean:
+\t@rm -rf .build DerivedData
+\t@echo "✓ Build artifacts removed"
+
+"""
+
+    let makefileDest = projectRoot.appendingPathComponent("Makefile")
+    try makefileContent.write(to: makefileDest, atomically: true, encoding: .utf8)
+
+    printSuccess("   Makefile generated")
+}
+
+func setupWorkflows() throws {
+    print("")
+    printInfo("⚙️  Copying GitHub Actions workflows...")
+
+    let workflowsSource = scriptDir.appendingPathComponent("workflows")
+    guard fileManager.fileExists(atPath: workflowsSource.path) else {
+        printWarning("   workflows/ not found in ARCDevTools")
+        return
+    }
+
+    let githubWorkflowsDir = projectRoot.appendingPathComponent(".github/workflows")
+    try? fileManager.createDirectory(at: githubWorkflowsDir, withIntermediateDirectories: true)
+
+    // Copy all workflow files
+    let workflowFiles = try fileManager.contentsOfDirectory(atPath: workflowsSource.path)
+    for filename in workflowFiles where filename.hasSuffix(".yml") {
+        let sourceFile = workflowsSource.appendingPathComponent(filename)
+        let destFile = githubWorkflowsDir.appendingPathComponent(filename)
+
+        // Read original content
+        let originalContent = try String(contentsOf: sourceFile, encoding: .utf8)
+
+        // Add template comment at top
+        let templateComment = """
+        # ARCDevTools Workflow Template
+        # Source: https://github.com/arclabs-studio/ARCDevTools/workflows/\(filename)
+        #
+        # This file was copied from ARCDevTools. You can customize it for your project.
+        # To update: re-run ./ARCDevTools/arc-setup or manually copy from ARCDevTools/workflows/
+
+        """
+        let newContent = templateComment + originalContent
+
+        try? fileManager.removeItem(at: destFile)
+        try newContent.write(to: destFile, atomically: true, encoding: .utf8)
+        printSuccess("   \(filename)")
+    }
+
+    // Copy templates
+    let templatesDir = scriptDir.appendingPathComponent("templates")
+    let githubDir = projectRoot.appendingPathComponent(".github")
+
+    if fileManager.fileExists(atPath: templatesDir.path) {
+        let templates = [
+            "PULL_REQUEST_TEMPLATE.md",
+            "markdown-link-check-config.json",
+            "release-drafter.yml"
+        ]
+
+        for template in templates {
+            let source = templatesDir.appendingPathComponent(template)
+            let dest = githubDir.appendingPathComponent(template)
+
+            if fileManager.fileExists(atPath: source.path) {
+                try? fileManager.removeItem(at: dest)
+                try? fileManager.copyItem(at: source, to: dest)
+            }
+        }
+    }
+}
+
+func askUserForWorkflows() -> Bool {
+    print("")
+    print("Do you want to copy GitHub Actions workflows? [y/N]: ", terminator: "")
+
+    guard let response = readLine()?.lowercased() else {
+        return false
+    }
+
+    return response == "y" || response == "yes"
+}
+
+func printSuccess() {
+    print("")
+    printSuccess("ARCDevTools configured successfully")
+    print("")
+    print("📝 Next steps:", color: Color.blue)
+    print("   1. Run: make lint")
+    print("   2. Run: make format")
+    print("   3. Make a commit to test pre-commit hook")
+    print("")
+    print("💡 See available commands: make help", color: Color.blue)
+    print("")
+}
+
+// MARK: - Error Handling
+
+enum SetupError: Error {
+    case invalidProjectRoot
+}
+
+// MARK: - Main Execution
+
+func main() {
+    do {
+        printBanner()
+        try verifyProjectRoot()
+        try setupConfigs()
+        try setupGitHooks()
+        try generateMakefile()
+
+        if askUserForWorkflows() {
+            try setupWorkflows()
+        }
+
+        printSuccess()
+
+    } catch {
+        print("")
+        printError("Error during setup: \(error)")
+        exit(1)
+    }
+}
+
+// Run
+main()
