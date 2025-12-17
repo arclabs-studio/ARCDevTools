@@ -1,6 +1,6 @@
 # 🛠️ ARCDevTools
 
-![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-macOS%20%7C%20iOS-blue.svg)
@@ -24,17 +24,6 @@ ARCDevTools is a configuration repository that provides standardized development
 - ✅ **Project Setup Script** - One-command installation (`arc-setup`)
 - ✅ **Makefile Generation** - Convenient commands for common tasks
 - ✅ **ARCKnowledge Submodule** - Development standards documentation included
-
-### What's New in v2.0.0
-
-🚀 **Major Architecture Change:** ARCDevTools is now a pure configuration repository integrated as a Git submodule (no longer a Swift Package Manager dependency).
-
-**Benefits:**
-- ⚡️ Faster setup (no Swift compilation)
-- 📁 Direct filesystem access to all resources
-- 🎨 Easier to customize and fork
-- 🔧 Works with any project type
-- 🚀 Simpler CI/CD integration
 
 ---
 
@@ -85,7 +74,7 @@ The setup script will:
 
 ```bash
 git add .gitmodules ARCDevTools/ .swiftlint.yml .swiftformat Makefile
-git commit -m "chore: integrate ARCDevTools v2.0 for quality automation"
+git commit -m "chore: integrate ARCDevTools v1.0 for quality automation"
 git push
 ```
 
@@ -319,18 +308,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for complete guidelines on:
 
 ---
 
-## 🔄 Migration from v1.x (SPM)
-
-If you're using ARCDevTools v1.x (Swift Package Manager), see the [Migration Guide](docs/MIGRATION_V1_TO_V2.md) for upgrade instructions.
-
-**Key changes in v2.0.0:**
-- Installation method: Git submodule instead of SPM
-- Setup command: `./ARCDevTools/arc-setup` instead of `swift run arc-setup`
-- No Swift API: Pure configuration repository (no `import ARCDevTools`)
-- Resource paths: Direct filesystem access (`ARCDevTools/configs/`)
-
----
-
 ## 📚 Documentation
 
 See the [docs/](docs/) directory for detailed guides:
@@ -340,7 +317,6 @@ See the [docs/](docs/) directory for detailed guides:
 - [Configuration](docs/configuration.md) - Customization options
 - [CI/CD Guide](docs/ci-cd.md) - GitHub Actions setup
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
-- [Migration Guide](docs/MIGRATION_V1_TO_V2.md) - Upgrade from v1.x to v2.x
 
 ---
 
