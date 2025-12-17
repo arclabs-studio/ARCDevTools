@@ -12,6 +12,7 @@ excluded:
   - DerivedData
   - Pods
   - Carthage
+  - ARCDevTools
   - "*/Generated/*"
   - "*.generated.swift"
 
