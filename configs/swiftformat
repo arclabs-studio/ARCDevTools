@@ -22,7 +22,7 @@
 
 # Spacing
 --trimwhitespace always
---commas always
+--commas never
 --semicolons inline
 --indent 4
 --ifdef no-indent

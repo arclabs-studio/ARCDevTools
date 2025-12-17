@@ -13,6 +13,56 @@ import Foundation
 
 let version = "1.0.0"
 
+// MARK: - Command Line Arguments
+
+struct Options {
+    var withWorkflows: Bool = false
+    var noWorkflows: Bool = false
+    var showHelp: Bool = false
+
+    var isInteractive: Bool {
+        !withWorkflows && !noWorkflows
+    }
+}
+
+func parseArguments() -> Options {
+    var options = Options()
+    let args = CommandLine.arguments.dropFirst()
+
+    for arg in args {
+        switch arg {
+        case "--with-workflows":
+            options.withWorkflows = true
+        case "--no-workflows":
+            options.noWorkflows = true
+        case "--help", "-h":
+            options.showHelp = true
+        default:
+            break
+        }
+    }
+
+    return options
+}
+
+func printHelp() {
+    print("")
+    printInfo("🔧 ARCDevTools Setup v\(version)")
+    print("")
+    print("Usage: arc-setup [options]")
+    print("")
+    print("Options:")
+    print("  --with-workflows  Install GitHub Actions workflows (non-interactive)")
+    print("  --no-workflows    Skip GitHub Actions workflows (non-interactive)")
+    print("  --help, -h        Show this help message")
+    print("")
+    print("Examples:")
+    print("  ./ARCDevTools/arc-setup                  # Interactive mode")
+    print("  ./ARCDevTools/arc-setup --with-workflows # CI mode with workflows")
+    print("  ./ARCDevTools/arc-setup --no-workflows   # CI mode without workflows")
+    print("")
+}
+
 // MARK: - ANSI Colors
 
 enum Color {
@@ -85,6 +135,19 @@ func verifyProjectRoot() throws {
     }
 }
 
+func setupSwiftVersion() throws {
+    print("")
+    printInfo("📋 Creating .swift-version...")
+
+    let swiftVersionDest = projectRoot.appendingPathComponent(".swift-version")
+
+    // Default to Swift 6.0
+    let swiftVersion = "6.0\n"
+
+    try swiftVersion.write(to: swiftVersionDest, atomically: true, encoding: .utf8)
+    printSuccess("   .swift-version (6.0)")
+}
+
 func setupConfigs() throws {
     print("")
     printInfo("📦 Copying configurations...")
@@ -116,11 +179,18 @@ func setupGitHooks() throws {
     print("")
     printInfo("🪝 Installing git hooks...")
 
+    let gitDir = projectRoot.appendingPathComponent(".git")
+    guard fileManager.fileExists(atPath: gitDir.path) else {
+        printWarning("   .git not found (is this a git repository?)")
+        return
+    }
+
     let gitHooksDir = projectRoot.appendingPathComponent(".git/hooks")
 
-    guard fileManager.fileExists(atPath: gitHooksDir.path) else {
-        printWarning("   .git/hooks not found (is this a git repository?)")
-        return
+    // Create hooks directory if it doesn't exist
+    if !fileManager.fileExists(atPath: gitHooksDir.path) {
+        try fileManager.createDirectory(at: gitHooksDir, withIntermediateDirectories: true)
+        printSuccess("   Created .git/hooks directory")
     }
 
     // Pre-commit hook
@@ -279,9 +349,15 @@ func askUserForWorkflows() -> Bool {
     return response == "y" || response == "yes"
 }
 
-func printSuccess() {
+func printFinalSuccess() {
     print("")
-    printSuccess("ARCDevTools configured successfully")
+    printSuccess("ARCDevTools v\(version) configured successfully")
+    print("")
+    print("📦 Installed configurations:", color: Color.blue)
+    print("   • .swift-version (v\(version))")
+    print("   • .swiftlint.yml (v\(version))")
+    print("   • .swiftformat (v\(version))")
+    print("   • Makefile (v\(version))")
     print("")
     print("📝 Next steps:", color: Color.blue)
     print("   1. Run: make lint")
@@ -301,18 +377,37 @@ enum SetupError: Error {
 // MARK: - Main Execution
 
 func main() {
+    let options = parseArguments()
+
+    if options.showHelp {
+        printHelp()
+        return
+    }
+
     do {
         printBanner()
         try verifyProjectRoot()
+        try setupSwiftVersion()
         try setupConfigs()
         try setupGitHooks()
         try generateMakefile()
 
-        if askUserForWorkflows() {
+        // Handle workflows based on options
+        let shouldInstallWorkflows: Bool
+        if options.withWorkflows {
+            shouldInstallWorkflows = true
+        } else if options.noWorkflows {
+            shouldInstallWorkflows = false
+        } else {
+            // Interactive mode
+            shouldInstallWorkflows = askUserForWorkflows()
+        }
+
+        if shouldInstallWorkflows {
             try setupWorkflows()
         }
 
-        printSuccess()
+        printFinalSuccess()
 
     } catch {
         print("")
