@@ -20,7 +20,7 @@ jobs:
 
       - name: Run SwiftLint
         run: |
-          cp Sources/ARCDevTools/Resources/Configs/swiftlint.yml .swiftlint.yml
+          cp configs/swiftlint.yml .swiftlint.yml
           swiftlint lint --strict
 
   swiftformat:
@@ -36,7 +36,7 @@ jobs:
 
       - name: Check formatting
         run: |
-          swiftformat --config Sources/ARCDevTools/Resources/Configs/swiftformat --lint Sources/ Tests/
+          swiftformat --config configs/swiftformat --lint Sources/ Tests/
 
   markdown-links:
     name: Validate Markdown Links
