@@ -33,14 +33,13 @@
 
 # Wrapping
 --wrapternary before-operators
---wrapattributes same-line
 
 # Attributes - Always on same line (ARC Labs style)
---varattributes same-line
---typeattributes same-line
---funcattributes same-line
---storedvarattrs same-line
---computedvarattrs same-line
+--type-attributes same-line
+--func-attributes same-line
+--stored-var-attributes same-line
+--computed-var-attributes same-line
+--complex-attributes same-line
 
 # Organization
 --organizetypes actor,class,enum,struct
