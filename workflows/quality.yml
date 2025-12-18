@@ -14,12 +14,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install SwiftLint
         run: brew install swiftlint
 
       - name: Run SwiftLint
-        run: swiftlint lint --config .swiftlint.yml --strict
+        run: swiftlint lint --config ARCDevTools/configs/swiftlint.yml --strict
 
   swiftformat:
     name: SwiftFormat
@@ -28,12 +30,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install SwiftFormat
         run: brew install swiftformat
 
       - name: Check formatting
-        run: swiftformat --config .swiftformat --lint Sources/ Tests/
+        run: swiftformat --config ARCDevTools/configs/swiftformat --lint Sources/ Tests/
 
   markdown-links:
     name: Validate Markdown Links
