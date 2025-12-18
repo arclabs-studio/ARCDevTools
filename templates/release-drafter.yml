@@ -67,7 +67,7 @@ template: |
   Or use the one-command setup:
 
   ```bash
-  swift run arc-setup
+  swift run arcdevtools-setup
   ```
 
   ## Contributors

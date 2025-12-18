@@ -49,7 +49,7 @@ func printHelp() {
     print("")
     printInfo("🔧 ARCDevTools Setup v\(version)")
     print("")
-    print("Usage: arc-setup [options]")
+    print("Usage: arcdevtools-setup [options]")
     print("")
     print("Options:")
     print("  --with-workflows  Install GitHub Actions workflows (non-interactive)")
@@ -57,9 +57,9 @@ func printHelp() {
     print("  --help, -h        Show this help message")
     print("")
     print("Examples:")
-    print("  ./ARCDevTools/arc-setup                  # Interactive mode")
-    print("  ./ARCDevTools/arc-setup --with-workflows # CI mode with workflows")
-    print("  ./ARCDevTools/arc-setup --no-workflows   # CI mode without workflows")
+    print("  ./ARCDevTools/arcdevtools-setup                  # Interactive mode")
+    print("  ./ARCDevTools/arcdevtools-setup --with-workflows # CI mode with workflows")
+    print("  ./ARCDevTools/arcdevtools-setup --no-workflows   # CI mode without workflows")
     print("")
 }
 
@@ -260,7 +260,7 @@ fix:
 \tfi
 
 setup:
-\t@./ARCDevTools/arc-setup
+\t@./ARCDevTools/arcdevtools-setup
 
 hooks:
 \t@./ARCDevTools/hooks/install-hooks.sh
@@ -305,7 +305,7 @@ func setupWorkflows() throws {
         # Source: https://github.com/arclabs-studio/ARCDevTools/workflows/\(filename)
         #
         # This file was copied from ARCDevTools. You can customize it for your project.
-        # To update: re-run ./ARCDevTools/arc-setup or manually copy from ARCDevTools/workflows/
+        # To update: re-run ./ARCDevTools/arcdevtools-setup or manually copy from ARCDevTools/workflows/
 
         """
         let newContent = templateComment + originalContent

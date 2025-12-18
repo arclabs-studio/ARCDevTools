@@ -21,7 +21,7 @@ ARCDevTools is a configuration repository that provides standardized development
 - ✅ **Pre-configured SwiftFormat** - Consistent code formatting across all projects
 - ✅ **Git Hooks** - Pre-commit and pre-push hooks for automated quality checks
 - ✅ **GitHub Actions Workflows** - CI/CD templates for quality, testing, and releases
-- ✅ **Project Setup Script** - One-command installation (`arc-setup`)
+- ✅ **Project Setup Script** - One-command installation (`arcdevtools-setup`)
 - ✅ **Makefile Generation** - Convenient commands for common tasks
 - ✅ **ARCKnowledge Submodule** - Development standards documentation included
 
@@ -60,7 +60,7 @@ This creates an `ARCDevTools/` directory in your project with all configuration 
 ### 3. Run Setup Script
 
 ```bash
-./ARCDevTools/arc-setup
+./ARCDevTools/arcdevtools-setup
 ```
 
 The setup script will:
@@ -175,7 +175,7 @@ For complete standards, see [ARCKnowledge](https://github.com/arclabs-studio/ARC
 
 ### Override Default Configs
 
-After running `arc-setup`, you can customize the copied configs:
+After running `arcdevtools-setup`, you can customize the copied configs:
 
 ```yaml
 # .swiftlint.yml - Add project-specific rules
@@ -198,7 +198,7 @@ custom_rules:
 
 Workflows are templates in `ARCDevTools/workflows/`. To use them:
 
-1. Run `./ARCDevTools/arc-setup` and choose "Yes" when asked about workflows
+1. Run `./ARCDevTools/arcdevtools-setup` and choose "Yes" when asked about workflows
 2. Workflows are copied to `.github/workflows/`
 3. Customize as needed for your project
 4. Commit to your repository
@@ -222,7 +222,7 @@ To get the latest configurations and scripts:
 cd ARCDevTools
 git pull origin main
 cd ..
-./ARCDevTools/arc-setup  # Re-run setup to update configs
+./ARCDevTools/arcdevtools-setup  # Re-run setup to update configs
 git add ARCDevTools
 git commit -m "chore: update ARCDevTools to latest version"
 ```
@@ -233,7 +233,7 @@ git commit -m "chore: update ARCDevTools to latest version"
 
 ```
 ARCDevTools/
-├── arc-setup                       # Installation script (bash)
+├── arcdevtools-setup                       # Installation script (bash)
 ├── configs/                        # Configuration files
 │   ├── swiftlint.yml
 │   └── swiftformat
@@ -303,7 +303,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for complete guidelines on:
 1. Clone with submodules: `git clone --recurse-submodules https://github.com/arclabs-studio/ARCDevTools.git`
 2. Create a feature branch: `feature/your-improvement`
 3. Follow the standards defined in [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)
-4. Ensure all changes work: test `arc-setup` in a sample project
+4. Ensure all changes work: test `arcdevtools-setup` in a sample project
 5. Create a pull request to `develop`
 
 ---

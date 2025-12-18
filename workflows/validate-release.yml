@@ -106,8 +106,8 @@ jobs:
 
       - name: Build executable
         run: |
-          echo "⚙️ Building arc-setup executable..."
-          swift build -c release --product arc-setup
+          echo "⚙️ Building arcdevtools-setup executable..."
+          swift build -c release --product arcdevtools-setup
 
       - name: Generate build summary
         if: always()
