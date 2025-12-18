@@ -24,7 +24,6 @@
 --trimwhitespace always
 --commas never
 --semicolons inline
---indent 4
 --ifdef no-indent
 --linebreaks lf
 
@@ -33,7 +32,13 @@
 
 # Wrapping
 --wrapternary before-operators
---wrapattributes same-line
+
+# Attributes - Always on same line (ARC Labs style)
+--type-attributes same-line
+--func-attributes same-line
+--stored-var-attributes same-line
+--computed-var-attributes same-line
+--complex-attributes same-line
 
 # Attributes - Always on same line (ARC Labs style)
 --varattributes same-line
