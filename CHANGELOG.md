@@ -23,7 +23,7 @@ ARCDevTools is a **configuration repository** integrated as a **Git submodule**,
 
 #### Core Functionality
 
-- ✅ **arc-setup Script** - Swift script (`#!/usr/bin/env swift`) for one-command project setup
+- ✅ **arcdevtools-setup Script** - Swift script (`#!/usr/bin/env swift`) for one-command project setup
   - Copies SwiftLint and SwiftFormat configurations
   - Installs git hooks (pre-commit, pre-push)
   - Generates Makefile with convenient commands
@@ -104,7 +104,7 @@ ARCDevTools follows a **clean directory structure**:
 
 ```
 ARCDevTools/
-├── arc-setup                       # Swift setup script
+├── arcdevtools-setup                       # Swift setup script
 ├── configs/                        # SwiftLint and SwiftFormat configs
 ├── hooks/                          # Git hooks
 ├── scripts/                        # Utility scripts
@@ -128,7 +128,7 @@ git submodule add https://github.com/arclabs-studio/ARCDevTools
 git submodule update --init --recursive
 
 # Run setup
-./ARCDevTools/arc-setup
+./ARCDevTools/arcdevtools-setup
 
 # Commit integration
 git add .gitmodules ARCDevTools/ .swiftlint.yml .swiftformat Makefile

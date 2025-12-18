@@ -56,7 +56,7 @@ Navigate to your project root directory and run the setup script:
 
 ```bash
 cd /path/to/your/project
-./ARCDevTools/arc-setup
+./ARCDevTools/arcdevtools-setup
 ```
 
 The setup tool will:
@@ -112,7 +112,7 @@ To get the latest configurations and scripts:
 cd ARCDevTools
 git pull origin main
 cd ..
-./ARCDevTools/arc-setup  # Re-run setup to update configs
+./ARCDevTools/arcdevtools-setup  # Re-run setup to update configs
 git add ARCDevTools
 git commit -m "chore: update ARCDevTools to latest version"
 ```
