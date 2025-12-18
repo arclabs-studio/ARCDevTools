@@ -33,6 +33,7 @@
 
 # Wrapping
 --wrapternary before-operators
+--wrapattributes same-line
 
 # Attributes - Always on same line (ARC Labs style)
 --varattributes same-line
