@@ -30,7 +30,7 @@ git submodule add https://github.com/arclabs-studio/ARCDevTools
 git submodule update --init --recursive
 
 # Run setup
-./ARCDevTools/arc-setup
+./ARCDevTools/arcdevtools-setup
 ```
 
 See [Getting Started](getting-started.md) for detailed installation instructions.
