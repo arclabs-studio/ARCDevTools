@@ -233,7 +233,13 @@ git commit -m "chore: update ARCDevTools to latest version"
 
 ```
 ARCDevTools/
-├── arcdevtools-setup                       # Installation script (bash)
+├── arcdevtools-setup               # Installation script (Swift)
+├── .claude/                        # Claude Code skills
+│   └── skills/
+│       └── arc-package-validator/  # Package validation skill
+│           ├── SKILL.md
+│           ├── references/
+│           └── scripts/
 ├── configs/                        # Configuration files
 │   ├── swiftlint.yml
 │   └── swiftformat
@@ -285,6 +291,52 @@ make fix           # Apply formatting
 - Automatically runs on `git push`
 - Runs all tests
 - Blocks push if tests fail
+
+---
+
+## 🤖 Claude Code Skills
+
+ARCDevTools includes skills for Claude Code that automate development tasks.
+
+### Skills Disponibles
+
+| Skill | Description |
+|-------|-------------|
+| `arc-package-validator` | Validates Swift Packages against ARCKnowledge standards |
+
+### Skills Installation
+
+Skills are installed automatically with `arcdevtools-setup`:
+
+```bash
+./ARCDevTools/arcdevtools-setup
+```
+
+Skills are installed to `.claude/skills/` in your project.
+
+### Usage
+
+In Claude Code, simply ask:
+- "Validate this package against ARC standards"
+- "Check package compliance"
+- "Is this package ready for release?"
+
+Or run directly:
+```bash
+swift .claude/skills/arc-package-validator/scripts/validate.swift .
+swift .claude/skills/arc-package-validator/scripts/validate.swift . --fix
+```
+
+### Validation Categories
+
+The `arc-package-validator` skill checks:
+
+- **📁 Structure** - Package.swift, README, LICENSE, CHANGELOG, Sources/, Tests/, Documentation.docc/
+- **⚙️ Configuration** - ARCDevTools integration, SwiftLint, SwiftFormat, GitHub workflows
+- **📖 Documentation** - Badges, required README sections, DocC catalog
+- **🧹 Code Quality** - SwiftLint, SwiftFormat, Swift build
+
+For detailed validation rules, see `.claude/skills/arc-package-validator/references/checklist.md`.
 
 ---
 
