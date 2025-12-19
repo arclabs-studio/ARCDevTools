@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Claude Code skills support in ARCDevTools
+- `arc-package-validator` skill: validates Swift Packages against ARCKnowledge standards
+  - Structure validation (Package.swift, README, LICENSE, etc.)
+  - Configuration validation (ARCDevTools integration, SwiftLint, SwiftFormat)
+  - Documentation validation (badges, required sections)
+  - Code quality validation (SwiftLint execution, SwiftFormat check, build)
+  - Auto-fix mode with `--fix` flag
+- `arcdevtools-setup` now installs Claude Code skills automatically
+
 ---
 
 ## [1.0.0] - 2025-12-17

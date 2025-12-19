@@ -338,6 +338,64 @@ func setupWorkflows() throws {
     }
 }
 
+func setupClaudeSkills() throws -> [String] {
+    print("")
+    printInfo("🤖 Installing Claude Code skills...")
+
+    let skillsSource = scriptDir.appendingPathComponent(".claude/skills")
+    guard fileManager.fileExists(atPath: skillsSource.path) else {
+        printWarning("   .claude/skills/ not found in ARCDevTools")
+        return []
+    }
+
+    let claudeDir = projectRoot.appendingPathComponent(".claude")
+    let skillsDir = projectRoot.appendingPathComponent(".claude/skills")
+
+    // Create .claude/skills directory if it doesn't exist
+    try? fileManager.createDirectory(at: skillsDir, withIntermediateDirectories: true)
+
+    var installedSkills: [String] = []
+
+    // Copy all skills from ARCDevTools
+    let skills = try fileManager.contentsOfDirectory(atPath: skillsSource.path)
+    for skillName in skills {
+        let sourceSkill = skillsSource.appendingPathComponent(skillName)
+        let destSkill = skillsDir.appendingPathComponent(skillName)
+
+        // Check if it's a directory (a skill)
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: sourceSkill.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            continue
+        }
+
+        // Remove existing skill if present
+        try? fileManager.removeItem(at: destSkill)
+
+        // Copy skill directory recursively
+        try fileManager.copyItem(at: sourceSkill, to: destSkill)
+
+        // Make scripts executable
+        let scriptsDir = destSkill.appendingPathComponent("scripts")
+        if fileManager.fileExists(atPath: scriptsDir.path) {
+            let scripts = try? fileManager.contentsOfDirectory(atPath: scriptsDir.path)
+            for script in scripts ?? [] {
+                let scriptPath = scriptsDir.appendingPathComponent(script)
+                try? makeExecutable(scriptPath)
+            }
+        }
+
+        installedSkills.append(skillName)
+        printSuccess("   \(skillName)")
+    }
+
+    if installedSkills.isEmpty {
+        printWarning("   No skills found to install")
+    }
+
+    return installedSkills
+}
+
 func askUserForWorkflows() -> Bool {
     print("")
     print("Do you want to copy GitHub Actions workflows? [y/N]: ", terminator: "")
@@ -349,7 +407,7 @@ func askUserForWorkflows() -> Bool {
     return response == "y" || response == "yes"
 }
 
-func printFinalSuccess() {
+func printFinalSuccess(installedSkills: [String] = []) {
     print("")
     printSuccess("ARCDevTools v\(version) configured successfully")
     print("")
@@ -359,6 +417,15 @@ func printFinalSuccess() {
     print("   • .swiftformat (v\(version))")
     print("   • Makefile (v\(version))")
     print("")
+
+    if !installedSkills.isEmpty {
+        print("🤖 Claude Code skills installed:", color: Color.blue)
+        for skill in installedSkills {
+            print("   • \(skill)")
+        }
+        print("")
+    }
+
     print("📝 Next steps:", color: Color.blue)
     print("   1. Run: make lint")
     print("   2. Run: make format")
@@ -407,7 +474,10 @@ func main() {
             try setupWorkflows()
         }
 
-        printFinalSuccess()
+        // Install Claude Code skills
+        let installedSkills = try setupClaudeSkills()
+
+        printFinalSuccess(installedSkills: installedSkills)
 
     } catch {
         print("")
