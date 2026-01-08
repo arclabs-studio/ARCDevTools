@@ -1,47 +1,76 @@
 #!/bin/bash
 # ARCDevTools Pre-commit Hook
-# Version: 1.0.0
+# Version: 1.1.0
 
 set -e
 
-echo "🔍 Pre-commit: Verificando calidad de código..."
+# Detectar si se está intentando saltar verificaciones
+if [ "$SKIP_HOOKS" = "1" ]; then
+  echo ""
+  echo "========================================================"
+  echo "  ADVERTENCIA: Verificaciones de pre-commit desactivadas"
+  echo "========================================================"
+  echo ""
+  echo "  El CI ejecutara estas mismas verificaciones y rechazara"
+  echo "  el PR si hay violaciones."
+  echo ""
+  echo "  Ejecuta 'make lint' o './ARCDevTools/scripts/pr-ready.sh'"
+  echo "  para verificar localmente antes de push."
+  echo ""
+  exit 0
+fi
+
+echo "Pre-commit: Verificando calidad de codigo..."
 
 # Detectar archivos Swift staged
 STAGED_SWIFT=$(git diff --cached --name-only --diff-filter=ACM | grep ".swift$" || true)
 
 if [ -z "$STAGED_SWIFT" ]; then
-  echo "   ℹ️  No hay archivos Swift en stage, omitiendo..."
+  echo "  No hay archivos Swift en stage, omitiendo..."
   exit 0
 fi
 
-echo "   📝 Archivos a verificar:"
-echo "$STAGED_SWIFT" | sed 's/^/      - /'
+echo "  Archivos a verificar:"
+echo "$STAGED_SWIFT" | sed 's/^/    - /'
 
 # 1. SwiftFormat (auto-fix)
 if command -v swiftformat >/dev/null 2>&1; then
-  echo "\n   🎨 Aplicando SwiftFormat..."
+  echo ""
+  echo "  Aplicando SwiftFormat..."
   echo "$STAGED_SWIFT" | xargs swiftformat --config .swiftformat 2>&1 | grep -v "running" || true
 
   # Re-stage archivos formateados
   echo "$STAGED_SWIFT" | xargs git add
-  echo "   ✓ Formato aplicado"
+  echo "  Formato aplicado"
 else
-  echo "   ⚠️  SwiftFormat no instalado (brew install swiftformat)"
+  echo "  SwiftFormat no instalado (brew install swiftformat)"
 fi
 
 # 2. SwiftLint (strict mode)
 if command -v swiftlint >/dev/null 2>&1; then
-  echo "\n   🔍 Ejecutando SwiftLint..."
+  echo ""
+  echo "  Ejecutando SwiftLint..."
 
   if echo "$STAGED_SWIFT" | xargs swiftlint lint --config .swiftlint.yml --strict --quiet; then
-    echo "   ✓ SwiftLint passed"
+    echo "  SwiftLint passed"
   else
-    echo "\n   ❌ SwiftLint falló - Revisa los errores arriba"
-    echo "   💡 Tip: Ejecuta 'make lint' para ver detalles"
+    echo ""
+    echo "========================================================"
+    echo "  SwiftLint encontro violaciones"
+    echo "========================================================"
+    echo ""
+    echo "  Opciones:"
+    echo "    1. Corregir las violaciones mostradas arriba"
+    echo "    2. Ejecutar 'swiftlint lint --fix' para auto-correccion"
+    echo "    3. Usar 'SKIP_HOOKS=1 git commit' para saltar (NO recomendado)"
+    echo ""
+    echo "  Si saltas el hook, el CI rechazara el PR"
+    echo ""
     exit 1
   fi
 else
-  echo "   ⚠️  SwiftLint no instalado (brew install swiftlint)"
+  echo "  SwiftLint no instalado (brew install swiftlint)"
 fi
 
-echo "\n✅ Pre-commit completado - Commit permitido"
+echo ""
+echo "Pre-commit completado - Commit permitido"
