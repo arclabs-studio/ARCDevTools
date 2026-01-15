@@ -13,6 +13,20 @@ import Foundation
 
 let version = "1.0.0"
 
+// MARK: - Project Type Detection
+
+enum ProjectType {
+    case swiftPackage
+    case iOSApp
+
+    var displayName: String {
+        switch self {
+        case .swiftPackage: return "Swift Package"
+        case .iOSApp: return "iOS App"
+        }
+    }
+}
+
 // MARK: - Command Line Arguments
 
 struct Options {
@@ -112,8 +126,8 @@ func printBanner() {
     print("")
 }
 
-func verifyProjectRoot() throws {
-    printInfo("📂 Verifying project root...")
+func detectProjectType() throws -> ProjectType {
+    printInfo("📂 Detecting project type...")
 
     let hasPackageSwift = fileManager.fileExists(
         atPath: projectRoot.appendingPathComponent("Package.swift").path
@@ -122,17 +136,95 @@ func verifyProjectRoot() throws {
     let contents = (try? fileManager.contentsOfDirectory(atPath: projectRoot.path)) ?? []
     let hasXcodeProject = contents.contains { $0.hasSuffix(".xcodeproj") }
 
-    guard hasPackageSwift || hasXcodeProject else {
+    // Also check subdirectories for xcodeproj (common pattern: AppName/AppName.xcodeproj)
+    let hasNestedXcodeProject = contents.contains { item in
+        let itemPath = projectRoot.appendingPathComponent(item)
+        var isDir: ObjCBool = false
+        guard fileManager.fileExists(atPath: itemPath.path, isDirectory: &isDir), isDir.boolValue else {
+            return false
+        }
+        let subContents = (try? fileManager.contentsOfDirectory(atPath: itemPath.path)) ?? []
+        return subContents.contains { $0.hasSuffix(".xcodeproj") }
+    }
+
+    let hasAnyXcodeProject = hasXcodeProject || hasNestedXcodeProject
+
+    guard hasPackageSwift || hasAnyXcodeProject else {
         printError("No Package.swift or .xcodeproj detected")
         printError("Run this script from your project root directory")
         throw SetupError.invalidProjectRoot
     }
 
+    // Swift Package takes priority (can have both Package.swift and xcodeproj)
     if hasPackageSwift {
         printSuccess("Swift Package detected")
+        return .swiftPackage
     } else {
-        printSuccess("Xcode Project detected")
+        printSuccess("iOS App detected (Xcode project)")
+        return .iOSApp
     }
+}
+
+func findXcodeProjectPath() -> String? {
+    // Check root directory
+    let contents = (try? fileManager.contentsOfDirectory(atPath: projectRoot.path)) ?? []
+    if let proj = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
+        return proj
+    }
+
+    // Check subdirectories
+    for item in contents {
+        let itemPath = projectRoot.appendingPathComponent(item)
+        var isDir: ObjCBool = false
+        guard fileManager.fileExists(atPath: itemPath.path, isDirectory: &isDir), isDir.boolValue else {
+            continue
+        }
+        let subContents = (try? fileManager.contentsOfDirectory(atPath: itemPath.path)) ?? []
+        if let proj = subContents.first(where: { $0.hasSuffix(".xcodeproj") }) {
+            return "\(item)/\(proj)"
+        }
+    }
+    return nil
+}
+
+func detectXcodeScheme() -> String? {
+    guard let projPath = findXcodeProjectPath() else { return nil }
+
+    let fullPath = projectRoot.appendingPathComponent(projPath).path
+    let task = Process()
+    let pipe = Pipe()
+
+    task.executableURL = URL(fileURLWithPath: "/usr/bin/xcodebuild")
+    task.arguments = ["-list", "-project", fullPath]
+    task.standardOutput = pipe
+    task.standardError = FileHandle.nullDevice
+
+    do {
+        try task.run()
+        task.waitUntilExit()
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let output = String(data: data, encoding: .utf8) else { return nil }
+
+        // Parse schemes from xcodebuild output
+        let lines = output.components(separatedBy: "\n")
+        var inSchemes = false
+        for line in lines {
+            if line.contains("Schemes:") {
+                inSchemes = true
+                continue
+            }
+            if inSchemes {
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                if trimmed.isEmpty { break }
+                return trimmed // Return first scheme
+            }
+        }
+    } catch {
+        // Silently fail, will return nil
+    }
+
+    return nil
 }
 
 func setupSwiftVersion() throws {
@@ -219,21 +311,27 @@ func makeExecutable(_ url: URL) throws {
     try fileManager.setAttributes(attributes, ofItemAtPath: url.path)
 }
 
-func generateMakefile() throws {
+func generateMakefile(for projectType: ProjectType) throws {
     print("")
     printInfo("📄 Generating Makefile...")
 
-    let makefileContent = """
-# ARCDevTools Makefile
+    let makefileContent: String
+
+    switch projectType {
+    case .swiftPackage:
+        makefileContent = """
+# ARCDevTools Makefile (Swift Package)
 # Auto-generated - Do not edit manually
 
-.PHONY: help lint format fix setup hooks clean
+.PHONY: help lint format fix build test setup hooks clean
 
 help:
 \t@echo "ARCDevTools - Available commands:"
 \t@echo "  make lint      - Run SwiftLint"
 \t@echo "  make format    - Run SwiftFormat (dry-run)"
 \t@echo "  make fix       - Apply SwiftFormat"
+\t@echo "  make build     - Build the package"
+\t@echo "  make test      - Run tests"
 \t@echo "  make setup     - Re-install hooks and configs"
 \t@echo "  make hooks     - Re-install git hooks only"
 \t@echo "  make clean     - Clean build artifacts"
@@ -259,6 +357,12 @@ fix:
 \t\techo "⚠️  SwiftFormat not installed: brew install swiftformat"; \\
 \tfi
 
+build:
+\t@swift build
+
+test:
+\t@swift test --parallel
+
 setup:
 \t@./ARCDevTools/arcdevtools-setup
 
@@ -271,41 +375,141 @@ clean:
 
 """
 
+    case .iOSApp:
+        // Detect scheme for iOS apps
+        let scheme = detectXcodeScheme() ?? "$(SCHEME)"
+        let schemeNote = detectXcodeScheme() == nil
+            ? "# NOTE: Set SCHEME variable or run: make build SCHEME=YourScheme\nSCHEME ?= \n"
+            : "SCHEME = \(scheme)\n"
+
+        makefileContent = """
+# ARCDevTools Makefile (iOS App)
+# Auto-generated - Do not edit manually
+
+\(schemeNote)
+DESTINATION ?= platform=iOS Simulator,name=iPhone 16,OS=latest
+
+.PHONY: help lint format fix build test setup hooks clean
+
+help:
+\t@echo "ARCDevTools - Available commands:"
+\t@echo "  make lint      - Run SwiftLint"
+\t@echo "  make format    - Run SwiftFormat (dry-run)"
+\t@echo "  make fix       - Apply SwiftFormat"
+\t@echo "  make build     - Build the iOS app"
+\t@echo "  make test      - Run tests on iOS Simulator"
+\t@echo "  make setup     - Re-install hooks and configs"
+\t@echo "  make hooks     - Re-install git hooks only"
+\t@echo "  make clean     - Clean build artifacts"
+
+lint:
+\t@if command -v swiftlint >/dev/null 2>&1; then \\
+\t\tswiftlint lint --config .swiftlint.yml; \\
+\telse \\
+\t\techo "⚠️  SwiftLint not installed: brew install swiftlint"; \\
+\tfi
+
+format:
+\t@if command -v swiftformat >/dev/null 2>&1; then \\
+\t\tswiftformat --config .swiftformat --lint .; \\
+\telse \\
+\t\techo "⚠️  SwiftFormat not installed: brew install swiftformat"; \\
+\tfi
+
+fix:
+\t@if command -v swiftformat >/dev/null 2>&1; then \\
+\t\tswiftformat --config .swiftformat .; \\
+\telse \\
+\t\techo "⚠️  SwiftFormat not installed: brew install swiftformat"; \\
+\tfi
+
+build:
+\t@if [ -z "$(SCHEME)" ]; then \\
+\t\techo "⚠️  SCHEME not set. Run: make build SCHEME=YourScheme"; \\
+\t\texit 1; \\
+\tfi
+\t@xcodebuild build \\
+\t\t-scheme "$(SCHEME)" \\
+\t\t-destination "$(DESTINATION)" \\
+\t\t-configuration Debug \\
+\t\tCODE_SIGN_IDENTITY="" \\
+\t\tCODE_SIGNING_REQUIRED=NO \\
+\t\tCODE_SIGNING_ALLOWED=NO
+
+test:
+\t@if [ -z "$(SCHEME)" ]; then \\
+\t\techo "⚠️  SCHEME not set. Run: make test SCHEME=YourScheme"; \\
+\t\texit 1; \\
+\tfi
+\t@xcodebuild test \\
+\t\t-scheme "$(SCHEME)" \\
+\t\t-destination "$(DESTINATION)" \\
+\t\t-configuration Debug \\
+\t\tCODE_SIGN_IDENTITY="" \\
+\t\tCODE_SIGNING_REQUIRED=NO \\
+\t\tCODE_SIGNING_ALLOWED=NO
+
+setup:
+\t@./ARCDevTools/arcdevtools-setup
+
+hooks:
+\t@./ARCDevTools/hooks/install-hooks.sh
+
+clean:
+\t@rm -rf DerivedData
+\t@xcodebuild clean -scheme "$(SCHEME)" 2>/dev/null || true
+\t@echo "✓ Build artifacts removed"
+
+"""
+    }
+
     let makefileDest = projectRoot.appendingPathComponent("Makefile")
     try makefileContent.write(to: makefileDest, atomically: true, encoding: .utf8)
 
-    printSuccess("   Makefile generated")
+    printSuccess("   Makefile generated (\(projectType.displayName))")
 }
 
-func setupWorkflows() throws {
+func setupWorkflows(for projectType: ProjectType) throws {
     print("")
-    printInfo("⚙️  Copying GitHub Actions workflows...")
+    printInfo("⚙️  Copying GitHub Actions workflows (\(projectType.displayName))...")
 
-    let workflowsSource = scriptDir.appendingPathComponent("workflows")
+    // Determine which workflow directory to use
+    let workflowsDirName: String
+    switch projectType {
+    case .swiftPackage:
+        workflowsDirName = "workflows-spm"
+    case .iOSApp:
+        workflowsDirName = "workflows-ios"
+    }
+
+    let workflowsSource = scriptDir.appendingPathComponent(workflowsDirName)
+    let sharedWorkflowsSource = scriptDir.appendingPathComponent("workflows-spm")
+
     guard fileManager.fileExists(atPath: workflowsSource.path) else {
-        printWarning("   workflows/ not found in ARCDevTools")
+        printWarning("   \(workflowsDirName)/ not found in ARCDevTools")
         return
     }
 
     let githubWorkflowsDir = projectRoot.appendingPathComponent(".github/workflows")
     try? fileManager.createDirectory(at: githubWorkflowsDir, withIntermediateDirectories: true)
 
-    // Copy all workflow files
+    // Workflows specific to project type (quality.yml, tests.yml)
+    let projectSpecificWorkflows = ["quality.yml", "tests.yml"]
+
+    // Copy project-specific workflows from the appropriate directory
     let workflowFiles = try fileManager.contentsOfDirectory(atPath: workflowsSource.path)
     for filename in workflowFiles where filename.hasSuffix(".yml") {
         let sourceFile = workflowsSource.appendingPathComponent(filename)
         let destFile = githubWorkflowsDir.appendingPathComponent(filename)
 
-        // Read original content
         let originalContent = try String(contentsOf: sourceFile, encoding: .utf8)
 
-        // Add template comment at top
         let templateComment = """
-        # ARCDevTools Workflow Template
-        # Source: https://github.com/arclabs-studio/ARCDevTools/workflows/\(filename)
+        # ARCDevTools Workflow Template (\(projectType.displayName))
+        # Source: https://github.com/arclabs-studio/ARCDevTools/\(workflowsDirName)/\(filename)
         #
         # This file was copied from ARCDevTools. You can customize it for your project.
-        # To update: re-run ./ARCDevTools/arcdevtools-setup or manually copy from ARCDevTools/workflows/
+        # To update: re-run ./ARCDevTools/arcdevtools-setup or manually copy from ARCDevTools/\(workflowsDirName)/
 
         """
         let newContent = templateComment + originalContent
@@ -313,6 +517,36 @@ func setupWorkflows() throws {
         try? fileManager.removeItem(at: destFile)
         try newContent.write(to: destFile, atomically: true, encoding: .utf8)
         printSuccess("   \(filename)")
+    }
+
+    // Copy shared workflows from workflows-spm/ directory (those not project-specific)
+    if fileManager.fileExists(atPath: sharedWorkflowsSource.path) {
+        let sharedFiles = try fileManager.contentsOfDirectory(atPath: sharedWorkflowsSource.path)
+        for filename in sharedFiles where filename.hasSuffix(".yml") && !projectSpecificWorkflows.contains(filename) {
+            let sourceFile = sharedWorkflowsSource.appendingPathComponent(filename)
+            let destFile = githubWorkflowsDir.appendingPathComponent(filename)
+
+            // Skip if already exists (don't overwrite project-specific)
+            if fileManager.fileExists(atPath: destFile.path) {
+                continue
+            }
+
+            let originalContent = try String(contentsOf: sourceFile, encoding: .utf8)
+
+            let templateComment = """
+            # ARCDevTools Workflow Template
+            # Source: https://github.com/arclabs-studio/ARCDevTools/workflows-spm/\(filename)
+            #
+            # This file was copied from ARCDevTools. You can customize it for your project.
+            # To update: re-run ./ARCDevTools/arcdevtools-setup or manually copy from ARCDevTools/workflows-spm/
+
+            """
+            let newContent = templateComment + originalContent
+
+            try? fileManager.removeItem(at: destFile)
+            try newContent.write(to: destFile, atomically: true, encoding: .utf8)
+            printSuccess("   \(filename)")
+        }
     }
 
     // Copy templates
@@ -407,11 +641,13 @@ func askUserForWorkflows() -> Bool {
     return response == "y" || response == "yes"
 }
 
-func printFinalSuccess(installedSkills: [String] = []) {
+func printFinalSuccess(projectType: ProjectType, installedSkills: [String] = []) {
     print("")
     printSuccess("ARCDevTools v\(version) configured successfully")
     print("")
-    print("📦 Installed configurations:", color: Color.blue)
+    print("📦 Project type: \(projectType.displayName)", color: Color.blue)
+    print("")
+    print("📋 Installed configurations:", color: Color.blue)
     print("   • .swift-version (v\(version))")
     print("   • .swiftlint.yml (v\(version))")
     print("   • .swiftformat (v\(version))")
@@ -429,7 +665,17 @@ func printFinalSuccess(installedSkills: [String] = []) {
     print("📝 Next steps:", color: Color.blue)
     print("   1. Run: make lint")
     print("   2. Run: make format")
-    print("   3. Make a commit to test pre-commit hook")
+
+    switch projectType {
+    case .swiftPackage:
+        print("   3. Run: make build")
+        print("   4. Run: make test")
+    case .iOSApp:
+        print("   3. Run: make build SCHEME=YourScheme")
+        print("   4. Run: make test SCHEME=YourScheme")
+    }
+
+    print("   5. Make a commit to test pre-commit hook")
     print("")
     print("💡 See available commands: make help", color: Color.blue)
     print("")
@@ -453,11 +699,11 @@ func main() {
 
     do {
         printBanner()
-        try verifyProjectRoot()
+        let projectType = try detectProjectType()
         try setupSwiftVersion()
         try setupConfigs()
         try setupGitHooks()
-        try generateMakefile()
+        try generateMakefile(for: projectType)
 
         // Handle workflows based on options
         let shouldInstallWorkflows: Bool
@@ -471,13 +717,13 @@ func main() {
         }
 
         if shouldInstallWorkflows {
-            try setupWorkflows()
+            try setupWorkflows(for: projectType)
         }
 
         // Install Claude Code skills
         let installedSkills = try setupClaudeSkills()
 
-        printFinalSuccess(installedSkills: installedSkills)
+        printFinalSuccess(projectType: projectType, installedSkills: installedSkills)
 
     } catch {
         print("")
