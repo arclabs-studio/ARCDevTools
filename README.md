@@ -24,6 +24,16 @@ ARCDevTools is a configuration repository that provides standardized development
 - ✅ **Project Setup Script** - One-command installation (`arcdevtools-setup`)
 - ✅ **Makefile Generation** - Convenient commands for common tasks
 - ✅ **ARCKnowledge Submodule** - Development standards documentation included
+- ✅ **Multi-Project Support** - Works with both Swift Packages and iOS Apps
+
+### Supported Project Types
+
+| Project Type | Detection | Workflows | Build Commands |
+|-------------|-----------|-----------|----------------|
+| **Swift Package** | `Package.swift` present | `workflows-spm/` | `swift build`, `swift test` |
+| **iOS App** | `.xcodeproj` without `Package.swift` | `workflows-ios/` | `xcodebuild build`, `xcodebuild test` |
+
+The setup script automatically detects your project type and configures the appropriate workflows and Makefile commands.
 
 ---
 
@@ -86,6 +96,7 @@ git push
 
 After setup, use the generated Makefile:
 
+**Common commands (all project types):**
 ```bash
 make help      # Show all available commands
 make lint      # Run SwiftLint
@@ -95,6 +106,20 @@ make setup     # Re-run ARCDevTools setup
 make hooks     # Re-install git hooks only
 make clean     # Clean build artifacts
 ```
+
+**Swift Package commands:**
+```bash
+make build     # swift build
+make test      # swift test --parallel
+```
+
+**iOS App commands:**
+```bash
+make build SCHEME=MyApp    # xcodebuild build
+make test SCHEME=MyApp     # xcodebuild test
+```
+
+> **Note:** For iOS apps, the setup script attempts to auto-detect the scheme. If not detected, you must specify it with `SCHEME=YourScheme`.
 
 ### Git Hooks
 
@@ -127,14 +152,18 @@ ARCDevTools/scripts/format.sh
 ARCDevTools/scripts/setup-github-labels.sh
 ARCDevTools/scripts/setup-branch-protection.sh
 
-# GitHub Actions workflow templates
-ARCDevTools/workflows/quality.yml
-ARCDevTools/workflows/tests.yml
-ARCDevTools/workflows/docs.yml
-ARCDevTools/workflows/enforce-gitflow.yml
-ARCDevTools/workflows/sync-develop.yml
-ARCDevTools/workflows/validate-release.yml
-ARCDevTools/workflows/release-drafter.yml
+# GitHub Actions workflow templates (Swift Packages)
+ARCDevTools/workflows-spm/quality.yml
+ARCDevTools/workflows-spm/tests.yml
+ARCDevTools/workflows-spm/docs.yml
+ARCDevTools/workflows-spm/enforce-gitflow.yml
+ARCDevTools/workflows-spm/sync-develop.yml
+ARCDevTools/workflows-spm/validate-release.yml
+ARCDevTools/workflows-spm/release-drafter.yml
+
+# GitHub Actions workflow templates (iOS Apps)
+ARCDevTools/workflows-ios/quality.yml
+ARCDevTools/workflows-ios/tests.yml
 ```
 
 ---
@@ -196,21 +225,34 @@ custom_rules:
 
 ### GitHub Actions Workflows
 
-Workflows are templates in `ARCDevTools/workflows/`. To use them:
+Workflows are templates in `ARCDevTools/workflows-spm/` (Swift Packages) or `ARCDevTools/workflows-ios/` (iOS Apps). To use them:
 
 1. Run `./ARCDevTools/arcdevtools-setup` and choose "Yes" when asked about workflows
-2. Workflows are copied to `.github/workflows/`
+2. Workflows are copied to `.github/workflows/` (appropriate version for your project type)
 3. Customize as needed for your project
 4. Commit to your repository
 
-Available workflows:
-- `quality.yml` - SwiftLint, SwiftFormat, Markdown link checking
-- `tests.yml` - Run tests on macOS and Linux
+**Core workflows (adapted per project type):**
+
+| Workflow | Swift Package | iOS App |
+|----------|--------------|---------|
+| `quality.yml` | SwiftFormat checks `Sources/`, `Tests/` | SwiftFormat checks project root |
+| `tests.yml` | `swift test` on macOS + Linux | `xcodebuild test` on iOS Simulator |
+
+**Shared workflows (same for all projects):**
 - `docs.yml` - Generate and publish DocC documentation
 - `enforce-gitflow.yml` - Enforce Git Flow branch rules
 - `sync-develop.yml` - Auto-sync main → develop
 - `validate-release.yml` - Validate and create releases
 - `release-drafter.yml` - Auto-draft release notes from PRs
+
+#### iOS App Workflow Configuration
+
+For iOS apps, the `tests.yml` workflow auto-detects the Xcode scheme. To override:
+
+1. Go to **Settings > Secrets and variables > Actions > Variables**
+2. Add `XCODE_SCHEME` with your scheme name
+3. Optionally add `XCODE_DESTINATION` to customize the simulator
 
 ---
 
@@ -252,7 +294,13 @@ ARCDevTools/
 │   ├── format.sh
 │   ├── setup-github-labels.sh
 │   └── setup-branch-protection.sh
-├── workflows/                      # GitHub Actions templates
+├── workflows-spm/                  # GitHub Actions templates (Swift Packages)
+│   ├── quality.yml
+│   ├── tests.yml
+│   └── ...
+├── workflows-ios/                  # GitHub Actions templates (iOS Apps)
+│   ├── quality.yml                 # Uses .swiftformat from root
+│   └── tests.yml                   # Uses xcodebuild
 ├── templates/                      # GitHub templates
 ├── docs/                           # Documentation
 │   ├── README.md

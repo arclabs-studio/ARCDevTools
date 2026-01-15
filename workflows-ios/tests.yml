@@ -1,0 +1,111 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop, feature/*]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  # Default values - override via repository variables if needed
+  SCHEME: ${{ vars.XCODE_SCHEME || '' }}
+  DESTINATION: ${{ vars.XCODE_DESTINATION || 'platform=iOS Simulator,name=iPhone 16,OS=latest' }}
+
+jobs:
+  detect-scheme:
+    name: Detect Xcode Scheme
+    runs-on: macos-15
+    outputs:
+      scheme: ${{ steps.detect.outputs.scheme }}
+      has-tests: ${{ steps.detect.outputs.has-tests }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Detect scheme and test targets
+        id: detect
+        run: |
+          # If SCHEME env var is set, use it
+          if [ -n "$SCHEME" ]; then
+            echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
+            echo "Using configured scheme: $SCHEME"
+          else
+            # Find xcodeproj
+            XCODEPROJ=$(find . -maxdepth 2 -name "*.xcodeproj" -type d | head -1)
+            if [ -z "$XCODEPROJ" ]; then
+              echo "Error: No .xcodeproj found"
+              exit 1
+            fi
+
+            # List available schemes
+            SCHEMES=$(xcodebuild -list -project "$XCODEPROJ" 2>/dev/null | sed -n '/Schemes:/,/^$/p' | tail -n +2 | sed 's/^[[:space:]]*//' | grep -v '^$')
+
+            # Get first scheme (usually the main app)
+            FIRST_SCHEME=$(echo "$SCHEMES" | head -1)
+            echo "scheme=$FIRST_SCHEME" >> $GITHUB_OUTPUT
+            echo "Auto-detected scheme: $FIRST_SCHEME"
+          fi
+
+          # Check for test targets
+          XCODEPROJ=$(find . -maxdepth 2 -name "*.xcodeproj" -type d | head -1)
+          if xcodebuild -list -project "$XCODEPROJ" 2>/dev/null | grep -q "Tests"; then
+            echo "has-tests=true" >> $GITHUB_OUTPUT
+            echo "Test targets detected"
+          else
+            echo "has-tests=false" >> $GITHUB_OUTPUT
+            echo "No test targets detected"
+          fi
+
+  build-ios:
+    name: Build (iOS)
+    needs: detect-scheme
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Display Xcode version
+        run: xcodebuild -version
+
+      - name: Build for iOS
+        run: |
+          xcodebuild build \
+            -scheme "${{ needs.detect-scheme.outputs.scheme }}" \
+            -destination "${{ env.DESTINATION }}" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+  test-ios:
+    name: Test (iOS)
+    needs: [detect-scheme, build-ios]
+    if: needs.detect-scheme.outputs.has-tests == 'true'
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -scheme "${{ needs.detect-scheme.outputs.scheme }}" \
+            -destination "${{ env.DESTINATION }}" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
