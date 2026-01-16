@@ -254,6 +254,24 @@ For iOS apps, the `tests.yml` workflow auto-detects the Xcode scheme. To overrid
 2. Add `XCODE_SCHEME` with your scheme name
 3. Optionally add `XCODE_DESTINATION` to customize the simulator
 
+#### Billing Considerations (Private Repos)
+
+> **Warning:** macOS runners have a **10x billing multiplier** on GitHub Actions.
+>
+> - Free tier: 2,000 min/month = **only 200 macOS minutes**
+> - Typical iOS build: 8-12 minutes = **~15-20 builds/month max**
+
+ARCDevTools workflows are optimized to minimize macOS usage:
+- SwiftLint/SwiftFormat run on Ubuntu (1x multiplier)
+- Build and test are combined into a single job
+
+**Alternatives for high-volume CI:**
+- **Xcode Cloud:** 25 hours free with Apple Developer Program
+- **Codemagic:** 500 free minutes/month
+- **Self-hosted runners:** No billing multiplier
+
+See [docs/ci-cd.md](docs/ci-cd.md) for detailed billing optimization strategies.
+
 ---
 
 ## 🔄 Updating ARCDevTools

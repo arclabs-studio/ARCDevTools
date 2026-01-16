@@ -6,10 +6,22 @@ on:
   pull_request:
     branches: [main, develop]
 
+# ============================================================================
+# BILLING OPTIMIZATION
+# ============================================================================
+# This workflow is optimized for GitHub Actions billing:
+# - ubuntu-latest: 1x multiplier (standard rate)
+# - macos-15: 10x multiplier (use only when Xcode is required)
+#
+# SwiftLint and SwiftFormat run on Ubuntu to minimize costs.
+# For private repos with 2,000 min/month free tier, this saves ~90% on
+# quality checks compared to running on macOS.
+# ============================================================================
+
 jobs:
   swiftlint:
     name: SwiftLint
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -17,15 +29,16 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install SwiftLint
-        run: brew install swiftlint
-
       - name: Run SwiftLint
-        run: swiftlint lint --strict
+        uses: norio-nomura/action-swiftlint@3.2.1
+        with:
+          args: --strict
+        env:
+          DIFF_BASE: ${{ github.base_ref }}
 
   swiftformat:
     name: SwiftFormat
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -34,7 +47,13 @@ jobs:
           submodules: recursive
 
       - name: Install SwiftFormat
-        run: brew install swiftformat
+        run: |
+          # Download SwiftFormat binary for Linux
+          SWIFTFORMAT_VERSION="0.54.6"
+          curl -sL "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat_linux.zip" -o swiftformat.zip
+          unzip -q swiftformat.zip
+          chmod +x swiftformat_linux
+          sudo mv swiftformat_linux /usr/local/bin/swiftformat
 
       - name: Check formatting
         run: swiftformat --config .swiftformat --lint .
