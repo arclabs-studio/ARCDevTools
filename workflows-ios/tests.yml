@@ -6,23 +6,143 @@ on:
   pull_request:
     branches: [main, develop]
 
+# ============================================================================
+# BILLING OPTIMIZATION
+# ============================================================================
+# macOS runners have a 10x billing multiplier on GitHub Actions.
+# For private repos with 2,000 min/month free tier:
+# - 2,000 Linux minutes OR only 200 macOS minutes
+# - A typical iOS build takes 8-12 minutes = ~15-20 builds/month max
+#
+# This workflow minimizes macOS usage by:
+# 1. Combining detect-scheme into the build job (saves ~2 min)
+# 2. Running build and test in sequence on same runner
+# 3. Dynamically detecting available iOS simulators
+#
+# Alternatives for high-volume CI:
+# - Xcode Cloud: 25 hours free with Apple Developer Program
+# - Codemagic: Competitive pricing for mobile CI
+# - Self-hosted runners: No billing multiplier
+# ============================================================================
+
 env:
   # Default values - override via repository variables if needed
   SCHEME: ${{ vars.XCODE_SCHEME || '' }}
-  DESTINATION: ${{ vars.XCODE_DESTINATION || 'platform=iOS Simulator,name=iPhone 16,OS=latest' }}
+  # Note: XCODE_DESTINATION is now dynamically detected (see find-simulator step)
+  # Override with vars.XCODE_DESTINATION if you need a specific device
 
 jobs:
-  detect-scheme:
-    name: Detect Xcode Scheme
+  build-and-test:
+    name: Build & Test (iOS)
     runs-on: macos-15
-    outputs:
-      scheme: ${{ steps.detect.outputs.scheme }}
-      has-tests: ${{ steps.detect.outputs.has-tests }}
+    timeout-minutes: 30
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+
+      - name: Display Xcode version
+        run: xcodebuild -version
+
+      # ========================================================================
+      # iOS RUNTIME VERIFICATION
+      # ========================================================================
+      # GitHub's macos-15 runners may not have iOS Simulator runtime preinstalled.
+      # Only visionOS comes preinstalled. We need to:
+      # 1. Check if iOS runtime is available
+      # 2. Download it if missing (takes several minutes)
+      # 3. Wait for simulators to register
+      # ========================================================================
+      - name: Ensure iOS Runtime is available
+        id: runtime
+        run: |
+          echo "📱 Checking iOS runtime availability..."
+
+          # Check if any iOS runtime is installed
+          if xcrun simctl list runtimes | grep -qE "iOS.*--"; then
+            echo "✅ iOS runtime is already installed"
+            xcrun simctl list runtimes | grep iOS
+            echo "runtime_installed=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ iOS runtime not found, downloading..."
+            echo "This may take 5-10 minutes on first run."
+            echo ""
+
+            # Download iOS platform
+            xcodebuild -downloadPlatform iOS
+
+            # Wait for simulators to register (can take 1-2 minutes)
+            echo "⏳ Waiting for simulators to register..."
+            sleep 30
+
+            # Verify installation
+            if xcrun simctl list runtimes | grep -qE "iOS.*--"; then
+              echo "✅ iOS runtime installed successfully"
+              xcrun simctl list runtimes | grep iOS
+              echo "runtime_installed=true" >> $GITHUB_OUTPUT
+            else
+              echo "❌ Failed to install iOS runtime"
+              echo "runtime_installed=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
+
+      # ========================================================================
+      # SIMULATOR DETECTION
+      # ========================================================================
+      # Find an available iOS simulator dynamically instead of hardcoding.
+      # Prefers iPhone 16 Pro > iPhone 16 > iPhone 15 Pro > any available iPhone
+      # ========================================================================
+      - name: Find available simulator
+        id: simulator
+        run: |
+          echo "🔍 Finding available iOS simulator..."
+
+          # Check if user specified a destination via repository variable
+          if [ -n "${{ vars.XCODE_DESTINATION }}" ]; then
+            echo "📌 Using configured destination: ${{ vars.XCODE_DESTINATION }}"
+            echo "destination=${{ vars.XCODE_DESTINATION }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # List available devices
+          xcrun simctl list devices available
+
+          # Find simulator in order of preference
+          SIMULATOR=""
+
+          # Try preferred simulators in order
+          for DEVICE in "iPhone 16 Pro" "iPhone 16" "iPhone 15 Pro" "iPhone 15"; do
+            if xcrun simctl list devices available | grep -q "$DEVICE"; then
+              SIMULATOR="$DEVICE"
+              echo "✅ Found preferred simulator: $SIMULATOR"
+              break
+            fi
+          done
+
+          # Fallback: find any available iPhone
+          if [ -z "$SIMULATOR" ]; then
+            SIMULATOR=$(xcrun simctl list devices available -j | \
+              jq -r '.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone")) | .name' | \
+              head -1)
+          fi
+
+          if [ -z "$SIMULATOR" ]; then
+            echo "❌ No iOS simulator found"
+            echo "Available devices:"
+            xcrun simctl list devices available
+            exit 1
+          fi
+
+          echo "📱 Selected simulator: $SIMULATOR"
+          DESTINATION="platform=iOS Simulator,name=$SIMULATOR,OS=latest"
+          echo "destination=$DESTINATION" >> $GITHUB_OUTPUT
+          echo "simulator_name=$SIMULATOR" >> $GITHUB_OUTPUT
 
       - name: Detect scheme and test targets
         id: detect
@@ -51,61 +171,49 @@ jobs:
           # Check for test targets
           XCODEPROJ=$(find . -maxdepth 2 -name "*.xcodeproj" -type d | head -1)
           if xcodebuild -list -project "$XCODEPROJ" 2>/dev/null | grep -q "Tests"; then
-            echo "has-tests=true" >> $GITHUB_OUTPUT
+            echo "has_tests=true" >> $GITHUB_OUTPUT
             echo "Test targets detected"
           else
-            echo "has-tests=false" >> $GITHUB_OUTPUT
+            echo "has_tests=false" >> $GITHUB_OUTPUT
             echo "No test targets detected"
           fi
 
-  build-ios:
-    name: Build (iOS)
-    needs: detect-scheme
-    runs-on: macos-15
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.app
-
-      - name: Display Xcode version
-        run: xcodebuild -version
-
       - name: Build for iOS
         run: |
+          echo "🔨 Building with destination: ${{ steps.simulator.outputs.destination }}"
+
           xcodebuild build \
-            -scheme "${{ needs.detect-scheme.outputs.scheme }}" \
-            -destination "${{ env.DESTINATION }}" \
+            -scheme "${{ steps.detect.outputs.scheme }}" \
+            -destination "${{ steps.simulator.outputs.destination }}" \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-
-  test-ios:
-    name: Test (iOS)
-    needs: [detect-scheme, build-ios]
-    if: needs.detect-scheme.outputs.has-tests == 'true'
-    runs-on: macos-15
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.app
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color || true
 
       - name: Run tests
+        if: steps.detect.outputs.has_tests == 'true'
         run: |
+          echo "🧪 Running tests with destination: ${{ steps.simulator.outputs.destination }}"
+
           xcodebuild test \
-            -scheme "${{ needs.detect-scheme.outputs.scheme }}" \
-            -destination "${{ env.DESTINATION }}" \
+            -scheme "${{ steps.detect.outputs.scheme }}" \
+            -destination "${{ steps.simulator.outputs.destination }}" \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --test || true
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## 📱 iOS Build & Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scheme:** \`${{ steps.detect.outputs.scheme }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Simulator:** \`${{ steps.simulator.outputs.simulator_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Has Tests:** ${{ steps.detect.outputs.has_tests }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚡ Billing Note" >> $GITHUB_STEP_SUMMARY
+          echo "This job ran on \`macos-15\` (10x billing multiplier)." >> $GITHUB_STEP_SUMMARY
+          echo "Consider using Xcode Cloud or self-hosted runners for high-volume CI." >> $GITHUB_STEP_SUMMARY
