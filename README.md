@@ -362,9 +362,30 @@ make fix           # Apply formatting
 
 ## 🤖 Claude Code Skills
 
-ARCDevTools includes skills for Claude Code that automate development tasks.
+ARCDevTools provides two categories of Claude Code skills:
 
-### Skills Disponibles
+### ARCKnowledge Skills (v2.0.0+)
+
+ARCKnowledge now includes **7 built-in skills** that enable **progressive context loading**, reducing token usage by ~87% compared to loading all documentation at once.
+
+| Skill | Command | Use When |
+|-------|---------|----------|
+| **Swift Architecture** | `/arc-swift-architecture` | Designing features, MVVM+C, Clean Architecture, SOLID |
+| **TDD Patterns** | `/arc-tdd-patterns` | Writing tests, Swift Testing, coverage requirements |
+| **Quality Standards** | `/arc-quality-standards` | Code review, SwiftLint/Format, documentation, accessibility |
+| **Data Layer** | `/arc-data-layer` | Repositories, API clients, DTOs, caching |
+| **Presentation Layer** | `/arc-presentation-layer` | Views, ViewModels, @Observable, navigation |
+| **Workflow** | `/arc-workflow` | Git commits, branches, PRs, Plan Mode |
+| **Project Setup** | `/arc-project-setup` | New packages/apps, ARCDevTools, Xcode, CI/CD |
+
+**How it works:**
+1. `CLAUDE.md` loads automatically with core philosophy (~200 lines)
+2. Use slash commands to load detailed context only when needed
+3. Each skill includes a `SKILL.md` summary + detailed documentation
+
+These skills are automatically available through the ARCKnowledge submodule.
+
+### ARCDevTools Skills
 
 | Skill | Description |
 |-------|-------------|
@@ -378,22 +399,27 @@ Skills are installed automatically with `arcdevtools-setup`:
 ./ARCDevTools/arcdevtools-setup
 ```
 
-Skills are installed to `.claude/skills/` in your project.
+ARCDevTools skills are installed to `.claude/skills/` in your project. ARCKnowledge skills are available through the submodule at `ARCDevTools/ARCKnowledge/.claude/skills/`.
 
 ### Usage
 
-In Claude Code, simply ask:
+**ARCKnowledge skills** - Use slash commands in Claude Code:
+- `/arc-swift-architecture` - Load architecture patterns
+- `/arc-tdd-patterns` - Load testing guidelines
+- `/arc-workflow` - Load git workflow conventions
+
+**ARCDevTools skills** - Ask Claude Code directly:
 - "Validate this package against ARC standards"
 - "Check package compliance"
 - "Is this package ready for release?"
 
-Or run directly:
+Or run the validator directly:
 ```bash
 swift .claude/skills/arc-package-validator/scripts/validate.swift .
 swift .claude/skills/arc-package-validator/scripts/validate.swift . --fix
 ```
 
-### Validation Categories
+### Package Validator Categories
 
 The `arc-package-validator` skill checks:
 
