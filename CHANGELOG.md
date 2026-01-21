@@ -20,6 +20,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Auto-fix mode with `--fix` flag
 - `arcdevtools-setup` now installs Claude Code skills automatically
 
+### Changed
+
+- **ARCKnowledge submodule updated to v2.0.0** - Major architecture change
+  - Migrated from flat document loading to **Claude Code Skills** system
+  - Reduces token usage by ~87% through progressive context loading
+  - `CLAUDE.md` minified from ~850 lines to ~200 lines (core philosophy only)
+  - 7 new skills available via slash commands:
+    - `/arc-swift-architecture` - Clean Architecture, MVVM+C, SOLID, Protocol-Oriented
+    - `/arc-tdd-patterns` - Swift Testing, TDD workflow, coverage requirements
+    - `/arc-quality-standards` - Code review, SwiftLint/Format, documentation, accessibility
+    - `/arc-data-layer` - Repositories, API clients, DTOs, caching strategies
+    - `/arc-presentation-layer` - Views, ViewModels, @Observable, navigation
+    - `/arc-workflow` - Conventional Commits, branches, PRs, Plan Mode
+    - `/arc-project-setup` - Packages, apps, ARCDevTools integration, Xcode, CI/CD
+  - Skills load detailed documentation on-demand instead of all at once
+
 ---
 
 ## [1.0.0] - 2025-12-17
