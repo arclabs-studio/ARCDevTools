@@ -647,7 +647,7 @@ func setupClaudeSkills() throws -> [String] {
 
             // Create symlink
             try? fileManager.removeItem(at: destSkill)
-            try fileManager.createSymbolicLink(at: destSkill, withDestinationPath: relativePath)
+            try fileManager.createSymbolicLink(atPath: destSkill.path, withDestinationPath: relativePath)
 
             installedSkills.append(skillName)
             symlinkedSkills.append(skillName)
