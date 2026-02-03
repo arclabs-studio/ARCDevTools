@@ -9,6 +9,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [2.4.0] - 2026-02-03
+
+### Added
+
+- **Branch protection configuration script** (`scripts/setup-branch-protection-all.sh`)
+  - Configures branch protection rules for all ARC Labs repositories
+  - Ensures consistent protection across main and develop branches
+
+### Changed
+
+- **ARCKnowledge submodule updated** to latest version
+
+---
+
+## [2.3.0] - 2025-01-XX
+
+### Added
+
+- Claude Code GitHub Actions automation scripts
+- CI workflow improvements for Claude Code integration
+
+### Fixed
+
+- Claude workflow permissions (contents: write)
+
+---
+
+## [2.2.0] - 2025-01-XX
+
+### Fixed
+
+- FileManager.createSymbolicLink API usage in setup script
+
+### Added
+
+- Auto-install ARCKnowledge skills during setup
+
+---
+
+## [2.1.0] - 2025-01-XX
+
+### Changed
+
+- ARCKnowledge submodule updated to v2.0.1
+
+---
+
+## [2.0.0] - 2025-01-XX
+
 ### Added
 
 - Claude Code skills support in ARCDevTools
@@ -182,5 +233,10 @@ git commit -m "chore: integrate ARCDevTools v1.0"
 
 ---
 
-[Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.3.0...v2.4.0
+[2.3.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.2.0...v2.3.0
+[2.2.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.0.0...v2.1.0
+[2.0.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/arclabs-studio/ARCDevTools/releases/tag/v1.0.0
