@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.1] - 2026-02-05
+
+### Changed
+
+- **ARCKnowledge submodule updated** to v2.4.0
+
+---
+
 ## [2.4.0] - 2026-02-03
 
 ### Added
@@ -233,7 +241,8 @@ git commit -m "chore: integrate ARCDevTools v1.0"
 
 ---
 
-[Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.4.1...HEAD
+[2.4.1]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.1.0...v2.2.0
