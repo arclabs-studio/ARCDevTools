@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.0] - 2026-02-19
+
+### Added
+
+- **CLAUDE.md** — Agent instructions for working on the ARCDevTools repository
+- **SwiftLint multiline rules** — `multiline_arguments` and `multiline_parameters` with `first_argument_location: same_line`
+- **Security patterns** in `.gitignore` (sensitive files, credentials, provisioning profiles)
+
+### Changed
+
+- **ARCKnowledge submodule updated** to v2.6.0 (11 skills)
+- **README.md** rewritten as implementation guide with complete skills documentation
+- **SwiftFormat** — All attributes set to same-line (`--type-attributes`, `--func-attributes`, `--stored-var-attributes`, `--computed-var-attributes`, `--complex-attributes`)
+- **SwiftLint** — `multiline_arguments_brackets` and `multiline_parameters_brackets` rules enabled
+
+---
+
 ## [2.5.0] - 2026-02-06
 
 ### Changed
