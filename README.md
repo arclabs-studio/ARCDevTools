@@ -1,63 +1,50 @@
 # 🛠️ ARCDevTools
 
-![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-2.5.0-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-macOS%20%7C%20iOS-blue.svg)
 
-**Centralized quality tooling and standards for ARC Labs Studio**
+**Centralized quality tooling for ARC Labs Studio**
 
-Quality automation • Code formatting • Linting • Git hooks • CI/CD
+One command installs SwiftLint, SwiftFormat, git hooks, CI/CD workflows, and Claude Code skills into any ARC Labs project.
 
 ---
 
 ## 🎯 Overview
 
-ARCDevTools is a configuration repository that provides standardized development tooling for all ARC Labs projects. It includes SwiftLint and SwiftFormat configurations, git hooks, GitHub Actions workflow templates, and automation scripts to ensure consistency across the ecosystem.
+ARCDevTools standardizes development tooling across all ARC Labs projects. Add it as a git submodule, run the setup script, and your project gets:
 
-### Key Features
-
-- ✅ **Pre-configured SwiftLint** - 40+ linting rules aligned with ARCKnowledge standards
-- ✅ **Pre-configured SwiftFormat** - Consistent code formatting across all projects
-- ✅ **Git Hooks** - Pre-commit and pre-push hooks for automated quality checks
-- ✅ **GitHub Actions Workflows** - CI/CD templates for quality, testing, and releases
-- ✅ **Project Setup Script** - One-command installation (`arcdevtools-setup`)
-- ✅ **Makefile Generation** - Convenient commands for common tasks
-- ✅ **ARCKnowledge Submodule** - Development standards documentation included
-- ✅ **Multi-Project Support** - Works with both Swift Packages and iOS Apps
+- **SwiftLint** — 40+ rules aligned with [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge) standards
+- **SwiftFormat** — Consistent formatting (4 spaces, 120 chars, same-line attributes)
+- **Git Hooks** — Pre-commit (format + lint) and pre-push (tests)
+- **Makefile** — `make lint`, `make format`, `make test`, and more
+- **CI/CD Workflows** — GitHub Actions templates for quality, testing, and releases
+- **Claude Code Skills** — 11 ARCKnowledge skills + package validator, auto-installed via symlinks
 
 ### Supported Project Types
 
-| Project Type | Detection | Workflows | Build Commands |
-|-------------|-----------|-----------|----------------|
-| **Swift Package** | `Package.swift` present | `workflows-spm/` | `swift build`, `swift test` |
-| **iOS App** | `.xcodeproj` without `Package.swift` | `workflows-ios/` | `xcodebuild build`, `xcodebuild test` |
+| Type | Detection | Build | Test |
+|------|-----------|-------|------|
+| **Swift Package** | `Package.swift` present | `swift build` | `swift test` |
+| **iOS App** | `.xcodeproj` present | `xcodebuild build` | `xcodebuild test` |
 
-The setup script automatically detects your project type and configures the appropriate workflows and Makefile commands.
+The setup script detects your project type automatically.
 
 ---
 
 ## 📋 Requirements
 
-- **Swift:** 6.0+ (for Swift projects)
-- **Platforms:** macOS 13.0+ / iOS 17.0+
-- **Xcode:** 16.0+ (for Xcode projects)
-- **Git:** 2.30+ (for submodule support)
-- **Tools:** SwiftLint, SwiftFormat (installed via Homebrew)
+- **Swift** 6.0+
+- **Xcode** 16.0+ (for iOS apps)
+- **Git** 2.30+
+- **SwiftLint** and **SwiftFormat** (`brew install swiftlint swiftformat`)
 
 ---
 
 ## 🚀 Installation
 
-### 1. Install Required Tools
-
-```bash
-brew install swiftlint swiftformat
-```
-
-### 2. Add ARCDevTools as Submodule
-
-Navigate to your project root and add ARCDevTools:
+### 1. Add as Submodule
 
 ```bash
 cd /path/to/your/project
@@ -65,226 +52,191 @@ git submodule add https://github.com/arclabs-studio/ARCDevTools
 git submodule update --init --recursive
 ```
 
-This creates an `ARCDevTools/` directory in your project with all configuration files and scripts.
+The `--recursive` flag is important — it also pulls the nested ARCKnowledge submodule that contains the development standards and Claude Code skills.
 
-### 3. Run Setup Script
+### 2. Run Setup
 
 ```bash
 ./ARCDevTools/arcdevtools-setup
 ```
 
-The setup script will:
-- ✅ Copy `.swiftlint.yml` to your project
-- ✅ Copy `.swiftformat` to your project
-- ✅ Install git hooks (pre-commit, pre-push)
-- ✅ Generate `Makefile` with useful commands
-- ✅ Optionally copy GitHub Actions workflows
+This copies configs to your project root, installs git hooks, generates a Makefile, and symlinks Claude Code skills. You'll be asked whether to also copy GitHub Actions workflows.
 
-### 4. Commit the Integration
+Non-interactive mode for CI:
+```bash
+./ARCDevTools/arcdevtools-setup --with-workflows   # Include workflows
+./ARCDevTools/arcdevtools-setup --no-workflows     # Skip workflows
+```
+
+### 3. Commit
 
 ```bash
-git add .gitmodules ARCDevTools/ .swiftlint.yml .swiftformat Makefile
-git commit -m "chore: integrate ARCDevTools v1.0 for quality automation"
-git push
+git add .gitmodules ARCDevTools/ .swiftlint.yml .swiftformat Makefile .claude/
+git commit -m "chore: integrate ARCDevTools for quality automation"
+```
+
+### What Gets Installed
+
+After setup, your project looks like this:
+
+```
+YourProject/
+├── ARCDevTools/                     ← submodule (this repo)
+│   └── ARCKnowledge/               ← nested submodule (standards + skills)
+├── .swiftlint.yml                  ← copied from configs/
+├── .swiftformat                    ← copied from configs/
+├── .git/hooks/pre-commit           ← installed from hooks/
+├── .git/hooks/pre-push             ← installed from hooks/
+├── Makefile                        ← generated for your project type
+├── .github/workflows/              ← copied if you chose workflows
+└── .claude/skills/                 ← ARCKnowledge skills (symlinks) + ARCDevTools skills (copied)
 ```
 
 ---
 
 ## 📖 Usage
 
-### Available Commands
+### Makefile Commands
 
-After setup, use the generated Makefile:
-
-**Common commands (all project types):**
 ```bash
 make help      # Show all available commands
 make lint      # Run SwiftLint
 make format    # Check formatting (dry-run)
-make fix       # Apply SwiftFormat
+make fix       # Apply SwiftFormat auto-fixes
 make setup     # Re-run ARCDevTools setup
-make hooks     # Re-install git hooks only
+make hooks     # Re-install git hooks
 make clean     # Clean build artifacts
 ```
 
-**Swift Package commands:**
+**Swift Packages** also get:
 ```bash
 make build     # swift build
 make test      # swift test --parallel
 ```
 
-**iOS App commands:**
+**iOS Apps** also get:
 ```bash
 make build SCHEME=MyApp    # xcodebuild build
 make test SCHEME=MyApp     # xcodebuild test
 ```
 
-> **Note:** For iOS apps, the setup script attempts to auto-detect the scheme. If not detected, you must specify it with `SCHEME=YourScheme`.
-
 ### Git Hooks
 
-ARCDevTools installs automatic quality checks:
+Quality checks run automatically:
 
-**Pre-commit hook:**
-- Runs SwiftFormat on staged Swift files (auto-fixes)
-- Runs SwiftLint in strict mode (must pass to commit)
-
-**Pre-push hook:**
-- Runs all tests before pushing (prevents broken code from reaching remote)
-
-### Manual Configuration Access
-
-All resources are directly accessible in the `ARCDevTools/` directory:
-
-```bash
-# Configuration files
-ARCDevTools/configs/swiftlint.yml
-ARCDevTools/configs/swiftformat
-
-# Git hooks
-ARCDevTools/hooks/pre-commit
-ARCDevTools/hooks/pre-push
-ARCDevTools/hooks/install-hooks.sh
-
-# Utility scripts
-ARCDevTools/scripts/lint.sh
-ARCDevTools/scripts/format.sh
-ARCDevTools/scripts/setup-github-labels.sh
-ARCDevTools/scripts/setup-branch-protection.sh
-
-# GitHub Actions workflow templates (Swift Packages)
-ARCDevTools/workflows-spm/quality.yml
-ARCDevTools/workflows-spm/tests.yml
-ARCDevTools/workflows-spm/docs.yml
-ARCDevTools/workflows-spm/enforce-gitflow.yml
-ARCDevTools/workflows-spm/sync-develop.yml
-ARCDevTools/workflows-spm/validate-release.yml
-ARCDevTools/workflows-spm/release-drafter.yml
-
-# GitHub Actions workflow templates (iOS Apps)
-ARCDevTools/workflows-ios/quality.yml
-ARCDevTools/workflows-ios/tests.yml
-```
+- **Pre-commit** — Runs SwiftFormat (auto-fix) and SwiftLint (strict) on staged `.swift` files. Blocks the commit if linting fails.
+- **Pre-push** — Runs all tests. Blocks the push if tests fail.
 
 ---
 
-## 📐 Code Style Standards
+## 📐 Code Style
 
-ARCDevTools enforces the following standards (aligned with [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)):
+ARCDevTools enforces the code style defined in [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge). The key settings:
 
-### SwiftFormat Configuration
+### SwiftFormat
 
-- **Indentation:** 4 spaces
-- **Line width:** 120 characters
-- **Self keyword:** Omit when not required (`--self remove`)
-- **Imports:** Grouped and sorted, testable imports at bottom
-- **Braces:** Same-line (`--allman false`)
+| Setting | Value |
+|---------|-------|
+| Indentation | 4 spaces |
+| Line width | 120 characters |
+| Self keyword | Remove when not required |
+| Brace style | Same-line (K&R) |
+| Wrap arguments | After first (first param on same line) |
+| Wrap parameters | After first (first param on same line) |
+| Attributes | Always same-line (type, func, stored-var, computed-var, complex) |
+| Imports | Grouped, `@testable` at bottom |
 
-### SwiftLint Rules
+### SwiftLint
 
-- **40+ opt-in rules** for comprehensive quality checks
-- **Custom rules** for ARC Labs-specific patterns:
-  - `observable_viewmodel` - ViewModels must use `@Observable`
-  - `no_force_cast` - Avoid `as!`, use `as?`
-  - `no_force_try` - Avoid `try!`, use proper error handling
-  - `no_empty_line_after_guard` - Clean guard statement formatting
+**40+ opt-in rules** including:
 
-### Architecture Standards
+- **Multiline formatting** — `multiline_arguments` and `multiline_parameters` with `first_argument_location: same_line`, plus bracket and chain rules
+- **Safety** — `force_unwrapping`, `no_force_cast` (error), `no_force_try` (error)
+- **Style** — `implicit_return`, `closure_spacing`, `vertical_whitespace_*_braces`, `yoda_condition`
+- **Performance** — `first_where`, `last_where`, `sorted_first_last`, `contains_over_filter_*`
 
-- **Pattern:** MVVM + Clean Architecture
-- **ViewModels:** Use `@Observable` (Swift 6)
-- **Dependencies:** Protocol-based with dependency injection
-- **Testing:** Swift Testing framework
+**Custom rules:**
 
-For complete standards, see [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge).
+| Rule | Severity | Purpose |
+|------|----------|---------|
+| `observable_viewmodel` | warning | ViewModels must use `@Observable` |
+| `no_force_cast` | error | Use `as?` instead of `as!` |
+| `no_force_try` | error | Use proper error handling instead of `try!` |
+| `no_empty_line_after_guard` | warning | Clean guard statement formatting |
+
+Full configs: [`configs/swiftlint.yml`](configs/swiftlint.yml) and [`configs/swiftformat`](configs/swiftformat).
 
 ---
 
 ## 🛠️ Customization
 
-### Override Default Configs
+The copied configs (`.swiftlint.yml`, `.swiftformat`) are yours to modify. Your customizations are preserved when updating ARCDevTools — the setup script overwrites them, so commit any local overrides before re-running setup.
 
-After running `arcdevtools-setup`, you can customize the copied configs:
-
-```yaml
-# .swiftlint.yml - Add project-specific rules
-parent_config: .swiftlint.yml
-
-disabled_rules:
-  - line_length  # Example: disable if needed
-
-custom_rules:
-  my_custom_rule:
-    name: "My Custom Rule"
-    regex: "..."
-    message: "Custom message"
-    severity: warning
-```
-
-**Note:** Your customizations are preserved when updating ARCDevTools.
-
-### GitHub Actions Workflows
-
-Workflows are templates in `ARCDevTools/workflows-spm/` (Swift Packages) or `ARCDevTools/workflows-ios/` (iOS Apps). To use them:
-
-1. Run `./ARCDevTools/arcdevtools-setup` and choose "Yes" when asked about workflows
-2. Workflows are copied to `.github/workflows/` (appropriate version for your project type)
-3. Customize as needed for your project
-4. Commit to your repository
-
-**Core workflows (adapted per project type):**
-
-| Workflow | Swift Package | iOS App |
-|----------|--------------|---------|
-| `quality.yml` | SwiftFormat checks `Sources/`, `Tests/` | SwiftFormat checks project root |
-| `tests.yml` | `swift test` on macOS + Linux | `xcodebuild test` on iOS Simulator |
-
-**Shared workflows (same for all projects):**
-- `docs.yml` - Generate and publish DocC documentation
-- `enforce-gitflow.yml` - Enforce Git Flow branch rules
-- `sync-develop.yml` - Auto-sync main → develop
-- `validate-release.yml` - Validate and create releases
-- `release-drafter.yml` - Auto-draft release notes from PRs
-
-#### iOS App Workflow Configuration
-
-For iOS apps, the `tests.yml` workflow auto-detects the Xcode scheme. To override:
-
-1. Go to **Settings > Secrets and variables > Actions > Variables**
-2. Add `XCODE_SCHEME` with your scheme name
-3. Optionally add `XCODE_DESTINATION` to customize the simulator
-
-#### Billing Considerations (Private Repos)
-
-> **Warning:** macOS runners have a **10x billing multiplier** on GitHub Actions.
->
-> - Free tier: 2,000 min/month = **only 200 macOS minutes**
-> - Typical iOS build: 8-12 minutes = **~15-20 builds/month max**
-
-ARCDevTools workflows are optimized to minimize macOS usage:
-- SwiftLint/SwiftFormat run on Ubuntu (1x multiplier)
-- Build and test are combined into a single job
-
-**Alternatives for high-volume CI:**
-- **Xcode Cloud:** 25 hours free with Apple Developer Program
-- **Codemagic:** 500 free minutes/month
-- **Self-hosted runners:** No billing multiplier
-
-See [docs/ci-cd.md](docs/ci-cd.md) for detailed billing optimization strategies.
+For project-specific SwiftLint additions, edit the copied `.swiftlint.yml` directly.
 
 ---
 
-## 🔄 Updating ARCDevTools
+## ⚙️ GitHub Actions Workflows
 
-To get the latest configurations and scripts:
+Workflows are templates adapted per project type. Choose to install them during setup.
+
+**Core workflows:**
+
+| Workflow | Swift Package | iOS App |
+|----------|--------------|---------|
+| `quality.yml` | Checks `Sources/`, `Tests/` | Checks project root |
+| `tests.yml` | `swift test` (macOS + Linux) | `xcodebuild test` (iOS Simulator) |
+
+**Shared workflows:**
+- `enforce-gitflow.yml` — Branch rule enforcement
+- `sync-develop.yml` — Auto-sync main to develop
+- `release-drafter.yml` — Auto-draft release notes from PRs
+
+**SPM-only:** `docs.yml` (DocC), `validate-release.yml`
+
+> **Billing note:** macOS runners have a 10x billing multiplier on GitHub Actions. ARCDevTools optimizes by running lint/format on Ubuntu. See [docs/ci-cd.md](docs/ci-cd.md) for details.
+
+---
+
+## 🤖 Claude Code Skills
+
+ARCDevTools delivers Claude Code skills from two sources:
+
+### ARCKnowledge Skills (11 skills)
+
+Installed as **symlinks** from `ARCDevTools/ARCKnowledge/.claude/skills/` into your project's `.claude/skills/`. These provide progressive context loading — agents load only the standards they need for the current task.
+
+| Phase | Skills |
+|-------|--------|
+| **Architecture** | `/arc-swift-architecture`, `/arc-project-setup` |
+| **Implementation** | `/arc-presentation-layer`, `/arc-data-layer`, `/arc-tdd-patterns`, `/arc-worktrees-workflow`, `/arc-memory` |
+| **Review** | `/arc-final-review`, `/arc-quality-standards`, `/arc-workflow` |
+| **Audit** | `/arc-audit` |
+
+For detailed descriptions of each skill and how they interact with other skill sources (Axiom, MCP Cupertino), see [`ARCKnowledge/Skills/skills-index.md`](ARCKnowledge/Skills/skills-index.md).
+
+### ARCDevTools Skills
+
+Installed as **copies** into `.claude/skills/`:
+
+| Skill | Purpose |
+|-------|---------|
+| `arc-package-validator` | Validates Swift Packages against ARCKnowledge standards (structure, config, docs, quality) |
+
+Run directly: `swift .claude/skills/arc-package-validator/scripts/validate.swift .`
+
+---
+
+## 🔄 Updating
 
 ```bash
 cd ARCDevTools
 git pull origin main
 cd ..
-./ARCDevTools/arcdevtools-setup  # Re-run setup to update configs
-git add ARCDevTools
-git commit -m "chore: update ARCDevTools to latest version"
+git submodule update --recursive
+./ARCDevTools/arcdevtools-setup
+git add ARCDevTools .swiftlint.yml .swiftformat Makefile
+git commit -m "chore(deps): update ARCDevTools to vX.Y.Z"
 ```
 
 ---
@@ -293,43 +245,28 @@ git commit -m "chore: update ARCDevTools to latest version"
 
 ```
 ARCDevTools/
-├── arcdevtools-setup               # Installation script (Swift)
-├── .claude/                        # Claude Code skills
-│   └── skills/
-│       └── arc-package-validator/  # Package validation skill
-│           ├── SKILL.md
-│           ├── references/
-│           └── scripts/
-├── configs/                        # Configuration files
-│   ├── swiftlint.yml
-│   └── swiftformat
-├── hooks/                          # Git hooks
-│   ├── pre-commit
-│   ├── pre-push
-│   └── install-hooks.sh
-├── scripts/                        # Utility scripts
-│   ├── lint.sh
-│   ├── format.sh
-│   ├── setup-github-labels.sh
-│   └── setup-branch-protection.sh
-├── workflows-spm/                  # GitHub Actions templates (Swift Packages)
-│   ├── quality.yml
-│   ├── tests.yml
-│   └── ...
-├── workflows-ios/                  # GitHub Actions templates (iOS Apps)
-│   ├── quality.yml                 # Uses .swiftformat from root
-│   └── tests.yml                   # Uses xcodebuild
-├── templates/                      # GitHub templates
-├── docs/                           # Documentation
-│   ├── README.md
-│   ├── getting-started.md
-│   ├── integration.md
-│   ├── configuration.md
-│   ├── ci-cd.md
-│   ├── troubleshooting.md
-│   └── MIGRATION_V1_TO_V2.md
-├── ARCKnowledge/                   # Development standards (submodule)
-├── README.md
+├── arcdevtools-setup              # Setup script (Swift)
+├── configs/
+│   ├── swiftlint.yml              # SwiftLint configuration
+│   └── swiftformat                # SwiftFormat configuration
+├── hooks/
+│   ├── pre-commit                 # Format + lint on commit
+│   ├── pre-push                   # Tests on push
+│   └── install-hooks.sh           # Hook installer
+├── scripts/
+│   ├── lint.sh                    # Standalone lint script
+│   ├── format.sh                  # Standalone format script
+│   ├── setup-github-labels.sh     # GitHub label configuration
+│   ├── setup-branch-protection.sh # Branch protection rules
+│   └── setup-skills.sh            # Skills installer
+├── workflows-spm/                 # CI/CD templates (Swift Packages)
+├── workflows-ios/                 # CI/CD templates (iOS Apps)
+├── claude-hooks/                  # Claude Code hooks (notifications)
+├── templates/                     # GitHub PR template, etc.
+├── .claude/skills/                # ARCDevTools-specific skills
+│   └── arc-package-validator/
+├── ARCKnowledge/                  # Submodule: standards + skills
+├── docs/                          # Additional documentation
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 └── LICENSE
@@ -337,151 +274,25 @@ ARCDevTools/
 
 ---
 
-## 🧪 Testing
-
-ARCDevTools includes automated quality checks via git hooks and GitHub Actions.
-
-**Local testing:**
-```bash
-make lint          # Run SwiftLint
-make format        # Check formatting
-make fix           # Apply formatting
-```
-
-**Pre-commit hook:**
-- Automatically runs on `git commit`
-- Formats and lints staged Swift files
-- Blocks commit if linting fails
-
-**Pre-push hook:**
-- Automatically runs on `git push`
-- Runs all tests
-- Blocks push if tests fail
-
----
-
-## 🤖 Claude Code Skills
-
-ARCDevTools provides two categories of Claude Code skills:
-
-### ARCKnowledge Skills (v2.0.0+)
-
-ARCKnowledge now includes **7 built-in skills** that enable **progressive context loading**, reducing token usage by ~87% compared to loading all documentation at once.
-
-| Skill | Command | Use When |
-|-------|---------|----------|
-| **Swift Architecture** | `/arc-swift-architecture` | Designing features, MVVM+C, Clean Architecture, SOLID |
-| **TDD Patterns** | `/arc-tdd-patterns` | Writing tests, Swift Testing, coverage requirements |
-| **Quality Standards** | `/arc-quality-standards` | Code review, SwiftLint/Format, documentation, accessibility |
-| **Data Layer** | `/arc-data-layer` | Repositories, API clients, DTOs, caching |
-| **Presentation Layer** | `/arc-presentation-layer` | Views, ViewModels, @Observable, navigation |
-| **Workflow** | `/arc-workflow` | Git commits, branches, PRs, Plan Mode |
-| **Project Setup** | `/arc-project-setup` | New packages/apps, ARCDevTools, Xcode, CI/CD |
-
-**How it works:**
-1. `CLAUDE.md` loads automatically with core philosophy (~200 lines)
-2. Use slash commands to load detailed context only when needed
-3. Each skill includes a `SKILL.md` summary + detailed documentation
-
-These skills are automatically available through the ARCKnowledge submodule.
-
-### ARCDevTools Skills
-
-| Skill | Description |
-|-------|-------------|
-| `arc-package-validator` | Validates Swift Packages against ARCKnowledge standards |
-
-### Skills Installation
-
-Skills are installed automatically with `arcdevtools-setup`:
-
-```bash
-./ARCDevTools/arcdevtools-setup
-```
-
-ARCDevTools skills are installed to `.claude/skills/` in your project. ARCKnowledge skills are available through the submodule at `ARCDevTools/ARCKnowledge/.claude/skills/`.
-
-### Usage
-
-**ARCKnowledge skills** - Use slash commands in Claude Code:
-- `/arc-swift-architecture` - Load architecture patterns
-- `/arc-tdd-patterns` - Load testing guidelines
-- `/arc-workflow` - Load git workflow conventions
-
-**ARCDevTools skills** - Ask Claude Code directly:
-- "Validate this package against ARC standards"
-- "Check package compliance"
-- "Is this package ready for release?"
-
-Or run the validator directly:
-```bash
-swift .claude/skills/arc-package-validator/scripts/validate.swift .
-swift .claude/skills/arc-package-validator/scripts/validate.swift . --fix
-```
-
-### Package Validator Categories
-
-The `arc-package-validator` skill checks:
-
-- **📁 Structure** - Package.swift, README, LICENSE, CHANGELOG, Sources/, Tests/, Documentation.docc/
-- **⚙️ Configuration** - ARCDevTools integration, SwiftLint, SwiftFormat, GitHub workflows
-- **📖 Documentation** - Badges, required README sections, DocC catalog
-- **🧹 Code Quality** - SwiftLint, SwiftFormat, Swift build
-
-For detailed validation rules, see `.claude/skills/arc-package-validator/references/checklist.md`.
-
----
-
 ## 🤝 Contributing
 
-ARCDevTools is an internal tool for ARC Labs Studio. Contributions from team members are welcome.
+ARCDevTools is an internal tool for ARC Labs Studio.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for complete guidelines on:
-- Git Flow workflow (feature → develop → main)
-- Conventional Commits format
-- Pull request process
-- Code quality standards
-- CI/CD automation
+1. Clone: `git clone --recurse-submodules https://github.com/arclabs-studio/ARCDevTools.git`
+2. Branch: `feature/your-improvement`
+3. Test changes by running `arcdevtools-setup` in a sample project
+4. PR to `develop`
 
-**Quick start:**
-1. Clone with submodules: `git clone --recurse-submodules https://github.com/arclabs-studio/ARCDevTools.git`
-2. Create a feature branch: `feature/your-improvement`
-3. Follow the standards defined in [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)
-4. Ensure all changes work: test `arcdevtools-setup` in a sample project
-5. Create a pull request to `develop`
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ---
 
-## 📚 Documentation
+## 🔗 Related
 
-See the [docs/](docs/) directory for detailed guides:
-
-- [Getting Started](docs/getting-started.md) - Installation walkthrough
-- [Integration Guide](docs/integration.md) - Detailed integration instructions
-- [Configuration](docs/configuration.md) - Customization options
-- [CI/CD Guide](docs/ci-cd.md) - GitHub Actions setup
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
+- **[ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)** — Development standards and Claude Code skills (included as submodule)
+- **[SwiftLint](https://github.com/realm/SwiftLint)** — Swift style enforcement
+- **[SwiftFormat](https://github.com/nicklockwood/SwiftFormat)** — Code formatting for Swift
 
 ---
 
-## 📄 License
-
-MIT License © 2025 ARC Labs Studio
-
-See [LICENSE](LICENSE) for details.
-
----
-
-## 🔗 Related Resources
-
-- **[ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)** - Complete development standards and guidelines (included as submodule)
-- **[SwiftLint](https://github.com/realm/SwiftLint)** - A tool to enforce Swift style and conventions
-- **[SwiftFormat](https://github.com/nicklockwood/SwiftFormat)** - Code formatting for Swift
-
----
-
-<div align="center">
-
-Made with 💛 by ARC Labs Studio
-
-</div>
+MIT License - 2025 ARC Labs Studio
