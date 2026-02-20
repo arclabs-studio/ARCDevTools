@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.0] - 2026-02-20
+
+### Added
+
+- **Claude Code hooks** — 4 hooks for real-time quality feedback during AI-assisted development:
+  - `format-on-save.sh` (PostToolUse) — Auto-formats `.swift` files with SwiftFormat after Edit/Write
+  - `validate-commit.sh` (PreToolUse) — Validates Conventional Commits format before `git commit`
+  - `session-start.sh` (SessionStart) — Shows branch, last release, and pending changes on session start
+  - `block-dangerous-git.sh` (PreToolUse) — Blocks force-push to main/develop, destructive resets, and clean operations
+- **Project hook configuration** — `.claude/settings.json` with PostToolUse, PreToolUse, Stop prompt, and SessionStart hooks
+- **Stop prompt hook** — Reminds Claude to verify `swift build` passes when `.swift` files were edited
+
+### Fixed
+
+- **block-dangerous-git** — Allow `git reset --hard origin/*` (safe sync to remote tracking branch)
+- **Hook false positives** — Strip heredoc content and quoted strings before pattern matching; anchor validate-commit to command start
+
+### Removed
+
+- **notification.sh** — Removed in favor of Ghostty terminal notifications (avoids duplicates)
+
+---
+
 ## [2.6.0] - 2026-02-19
 
 ### Added
