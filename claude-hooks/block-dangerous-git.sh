@@ -40,9 +40,10 @@ if [[ -z "$REASON" ]] && echo "$COMMAND" | grep -qE 'git\s+clean\s+.*-[a-zA-Z]*f
     REASON="git clean -f is blocked. This permanently removes untracked files. Use 'git clean -n' first to preview what would be removed."
 fi
 
-# Block: git reset --hard (without specific file)
-if [[ -z "$REASON" ]] && echo "$COMMAND" | grep -qE 'git\s+reset\s+--hard'; then
-    REASON="git reset --hard is blocked. This discards all uncommitted changes. Consider 'git stash' instead to preserve your work."
+# Block: git reset --hard (allow when targeting a remote tracking branch like origin/*)
+if [[ -z "$REASON" ]] && echo "$COMMAND" | grep -qE 'git\s+reset\s+--hard' && \
+   ! echo "$COMMAND" | grep -qE 'git\s+reset\s+--hard\s+origin/'; then
+    REASON="git reset --hard is blocked. This discards all uncommitted changes. Consider 'git stash' or 'git reset --hard origin/<branch>' instead."
 fi
 
 # Block: git branch -D main/develop
