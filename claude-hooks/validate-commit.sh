@@ -24,8 +24,11 @@ fi
 # Extract the command
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
-# Only validate git commit commands
-if [[ "$COMMAND" != *"git commit"* ]]; then
+# Only validate commands that START with git commit (ignoring leading whitespace)
+# This avoids false positives from strings that mention "git commit" inside
+# heredocs, echo statements, PR bodies, etc.
+FIRST_CMD=$(echo "$COMMAND" | sed 's/^[[:space:]]*//')
+if [[ "$FIRST_CMD" != "git commit"* ]]; then
     exit 0
 fi
 
