@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.2] - 2026-02-24
+
+### Fixed
+
+- **Pre-push hook** — Support Xcode projects and Makefile detection; was previously hardcoded to `swift test --parallel` only
+- **Hook installer** — `install-hooks.sh` now installs the pre-push hook (was only installing pre-commit)
+
+---
+
 ## [2.7.1] - 2026-02-24
 
 ### Fixed
@@ -298,7 +307,11 @@ git commit -m "chore: integrate ARCDevTools v1.0"
 
 ---
 
-[Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.5.0...HEAD
+[Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.2...HEAD
+[2.7.2]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.1...v2.7.2
+[2.7.1]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.0...v2.7.1
+[2.7.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.6.0...v2.7.0
+[2.6.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.4.1...v2.5.0
 [2.4.1]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.3.0...v2.4.0
