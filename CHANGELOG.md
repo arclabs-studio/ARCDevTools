@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.1] - 2026-02-24
+
+### Fixed
+
+- **Setup script** — Configure `pull.rebase=true` and remove `merge.ff=false` to prevent unwanted merge commits on pull after PR merges
+
+---
+
 ## [2.7.0] - 2026-02-20
 
 ### Added
