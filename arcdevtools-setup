@@ -304,6 +304,27 @@ func setupGitHooks() throws {
         try makeExecutable(prePushDest)
         printSuccess("   pre-push hook installed")
     }
+
+    // Configure git pull behavior (avoid unwanted merge commits)
+    let gitPullTask = Process()
+    gitPullTask.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+    gitPullTask.arguments = ["config", "--local", "pull.rebase", "true"]
+    gitPullTask.currentDirectoryURL = projectRoot
+    gitPullTask.standardOutput = FileHandle.nullDevice
+    gitPullTask.standardError = FileHandle.nullDevice
+    try? gitPullTask.run()
+    gitPullTask.waitUntilExit()
+    printSuccess("   pull.rebase=true configured")
+
+    // Remove merge.ff=false if present (causes unwanted merge commits on pull)
+    let unsetFfTask = Process()
+    unsetFfTask.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+    unsetFfTask.arguments = ["config", "--local", "--unset", "merge.ff"]
+    unsetFfTask.currentDirectoryURL = projectRoot
+    unsetFfTask.standardOutput = FileHandle.nullDevice
+    unsetFfTask.standardError = FileHandle.nullDevice
+    try? unsetFfTask.run()
+    unsetFfTask.waitUntilExit()
 }
 
 func makeExecutable(_ url: URL) throws {
