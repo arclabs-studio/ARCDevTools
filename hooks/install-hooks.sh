@@ -25,4 +25,13 @@ else
   echo "⚠️  No se encontró script pre-commit"
 fi
 
+# Copiar pre-push hook
+if [ -f "$SCRIPT_DIR/pre-push" ]; then
+  cp "$SCRIPT_DIR/pre-push" "$GIT_HOOKS_DIR/pre-push"
+  chmod +x "$GIT_HOOKS_DIR/pre-push"
+  echo "✓ pre-push hook instalado"
+else
+  echo "⚠️  No se encontró script pre-push"
+fi
+
 echo "✅ Git hooks instalados correctamente"

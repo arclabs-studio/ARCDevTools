@@ -2,13 +2,38 @@
 
 # ARCDevTools Pre-push Hook
 # Runs tests before pushing to remote
+# Supports both SPM packages (Package.swift) and Xcode projects (.xcodeproj)
 
 echo "🚀 Pre-push: Running tests..."
 
-# Run Swift tests
-swift test --parallel
+REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-# Capture exit code
+if [ -f "$REPO_ROOT/Makefile" ]; then
+    # Prefer Makefile — it already has the correct test command for the project type
+    make -C "$REPO_ROOT" test
+elif [ -f "$REPO_ROOT/Package.swift" ]; then
+    # SPM package
+    swift test --parallel --package-path "$REPO_ROOT"
+else
+    # Look for .xcodeproj in repo root or one level deep
+    XCODEPROJ=$(find "$REPO_ROOT" -maxdepth 2 -name "*.xcodeproj" -not -path "*/DerivedData/*" | head -1)
+    if [ -n "$XCODEPROJ" ]; then
+        SCHEME=$(basename "$XCODEPROJ" .xcodeproj)
+        xcodebuild test \
+            -project "$XCODEPROJ" \
+            -scheme "$SCHEME" \
+            -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=latest" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
+    else
+        echo "⚠️  No Package.swift, Makefile, or .xcodeproj found. Skipping tests."
+        exit 0
+    fi
+fi
+
 TEST_EXIT_CODE=$?
 
 if [ $TEST_EXIT_CODE -ne 0 ]; then
