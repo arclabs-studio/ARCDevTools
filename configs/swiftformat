@@ -14,7 +14,7 @@
 --wraparguments after-first
 --wrapparameters after-first
 --wrapcollections after-first
---closingparen balanced
+--closingparen same-line
 
 # Imports
 --importgrouping testable-bottom
