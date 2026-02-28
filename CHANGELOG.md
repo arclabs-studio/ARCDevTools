@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.3] - 2026-02-28
+
+### Fixed
+
+- **SwiftFormat config** — Changed `--closingparen` from `balanced` to `same-line` to resolve conflicts with SwiftLint's multiline rules
+- **SwiftLint config** — Removed `multiline_arguments_brackets` and `multiline_parameters_brackets` rules that conflicted with SwiftFormat
+- **SwiftLint config** — Added `excluded_match_kinds` (comment, doccomment, string) to `observable_viewmodel` custom rule to prevent false positives
+
+---
+
+
 ## [2.7.2] - 2026-02-24
 
 ### Fixed
