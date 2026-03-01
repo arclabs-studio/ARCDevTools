@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.4] - 2026-03-01
+
+### Fixed
+
+- **SwiftFormat config** — Disabled `wrapMultilineStatementBraces` rule that placed `{` on a new line after multiline parameter lists, conflicting with SwiftLint's `opening_brace` rule (K&R style required)
+- **SwiftLint config** — Removed `multiline_literal_brackets` opt-in rule that conflicted with SwiftFormat's `--wrapcollections after-first` setting
+- **Pre-commit hook** — Staged files are now filtered to only paths listed under `included:` in `.swiftlint.yml` (Sources/Tests) before linting, so files in `Examples/` and `Package.swift` are never passed to SwiftLint
+
+---
+
 ## [2.7.3] - 2026-02-28
 
 ### Fixed
