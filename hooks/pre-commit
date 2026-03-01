@@ -51,7 +51,29 @@ if command -v swiftlint >/dev/null 2>&1; then
   echo ""
   echo "  Ejecutando SwiftLint..."
 
-  if echo "$STAGED_SWIFT" | xargs swiftlint lint --config .swiftlint.yml --strict --quiet; then
+  # Filter staged files to only those in included paths from .swiftlint.yml
+  LINT_FILES=""
+  if [ -f ".swiftlint.yml" ]; then
+    INCLUDED_PATHS=$(grep -A 100 "^included:" .swiftlint.yml | grep "^  - " | sed 's/^  - //' | tr -d '"' || true)
+    if [ -n "$INCLUDED_PATHS" ]; then
+      for file in $STAGED_SWIFT; do
+        for inc in $INCLUDED_PATHS; do
+          if echo "$file" | grep -q "^$inc/"; then
+            LINT_FILES="$LINT_FILES $file"
+            break
+          fi
+        done
+      done
+    else
+      LINT_FILES="$STAGED_SWIFT"
+    fi
+  else
+    LINT_FILES="$STAGED_SWIFT"
+  fi
+
+  if [ -z "$LINT_FILES" ]; then
+    echo "  No hay archivos Swift en paths incluidos, omitiendo lint..."
+  elif echo "$LINT_FILES" | xargs swiftlint lint --config .swiftlint.yml --strict --quiet; then
     echo "  SwiftLint passed"
   else
     echo ""
