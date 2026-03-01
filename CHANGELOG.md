@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.5] - 2026-03-01
+
+### Fixed
+
+- **SwiftLint config** — Removed `multiline_arguments` and `multiline_parameters` opt-in rules that conflicted with SwiftFormat's `--wraparguments after-first` and `--wrapparameters after-first` settings. SwiftFormat aligns continuation args after the first arg on the same line, while SwiftLint required all-or-nothing multiline formatting — unresolvable without changing the wrap style. Removed associated rule-specific configuration blocks.
+
+---
+
 ## [2.7.4] - 2026-03-01
 
 ### Fixed
