@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.6] - 2026-03-04
+
+### Fixed
+
+- **SwiftFormat config** — Changed `--type-attributes` from `same-line` to `prev-line` so `@MainActor`, `@Observable`, and other type-level attributes appear on their own lines before `class`/`struct`/`actor` declarations. This matches the ARC Labs style for `@Observable` ViewModels.
+- **SwiftLint config** — Fixed `observable_viewmodel` custom rule regex: replaced the lookahead `(?!.*@Observable)` (which could never match with `prev-line` attributes) with a negative lookbehind `(?<!@Observable\n)` that correctly detects when `@Observable` does not immediately precede `final class`. Eliminates false positives on all ViewModels.
+
+---
+
 ## [2.7.5] - 2026-03-01
 
 ### Fixed
