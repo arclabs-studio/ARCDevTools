@@ -49,7 +49,7 @@
 
 # Swift 6 specific
 --marktypes always
---extensionacl on-declarations
+--extensionacl on-extension
 
 # Exclude
 --exclude .build,DerivedData,Pods,Carthage,Generated
