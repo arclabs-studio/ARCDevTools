@@ -163,10 +163,9 @@ For high-volume iOS CI/CD, consider these alternatives:
 | **Advantages** | Native Xcode integration, no simulator issues |
 | **Best For** | Production iOS apps |
 
-**Setup:**
-1. Open your project in Xcode
-2. Product > Xcode Cloud > Create Workflow
-3. Follow the setup wizard
+**Setup:** See the complete guide → [`docs/xcode-cloud-setup.md`](./xcode-cloud-setup.md)
+
+**ci_scripts/ Templates:** Copy from [`templates/ci_scripts/`](../templates/ci_scripts/) into your project root.
 
 ### 2. Codemagic
 
