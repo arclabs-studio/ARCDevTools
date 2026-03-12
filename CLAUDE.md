@@ -15,6 +15,7 @@ This is the **tooling source repo**, not a consumer project. Changes here propag
 | `scripts/` | Utility scripts (lint, format, GitHub labels, branch protection) |
 | `workflows-spm/` | GitHub Actions templates for Swift Packages |
 | `workflows-ios/` | GitHub Actions templates for iOS Apps |
+| `templates/ci_scripts/` | Xcode Cloud `ci_scripts/` templates (post_clone, pre_xcodebuild, post_xcodebuild) |
 | `claude-hooks/` | Claude Code hooks (macOS notifications) |
 | `.claude/skills/` | ARCDevTools-specific skills (`arc-package-validator`) |
 | `ARCKnowledge/` | **Submodule** — development standards, architecture docs, and Claude Code skills |
@@ -22,10 +23,10 @@ This is the **tooling source repo**, not a consumer project. Changes here propag
 
 ## What ARCKnowledge Provides (Submodule)
 
-ARCKnowledge contains the **development standards** and **11 Claude Code skills** that get symlinked into consumer projects during setup. All architecture patterns, code style rules, testing standards, and workflow conventions live there — not here.
+ARCKnowledge contains the **development standards** and **12 Claude Code skills** that get symlinked into consumer projects during setup. All architecture patterns, code style rules, testing standards, and workflow conventions live there — not here.
 
 - Standards: `ARCKnowledge/Architecture/`, `ARCKnowledge/Layers/`, `ARCKnowledge/Quality/`
-- Skills: `ARCKnowledge/.claude/skills/` (11 skills, see `ARCKnowledge/Skills/skills-index.md`)
+- Skills: `ARCKnowledge/.claude/skills/` (12 skills, see `ARCKnowledge/Skills/skills-index.md`)
 - Agent guide: `ARCKnowledge/CLAUDE.md` (comprehensive guide used by consumer projects)
 
 **Do not duplicate ARCKnowledge content in ARCDevTools.** Reference it instead.

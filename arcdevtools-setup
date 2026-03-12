@@ -737,6 +737,48 @@ func askUserForWorkflows() -> Bool {
     return response == "y" || response == "yes"
 }
 
+func askUserForCIScripts() -> Bool {
+    print("")
+    print("Do you want to install Xcode Cloud ci_scripts/? [y/N]: ", terminator: "")
+
+    guard let response = readLine()?.lowercased() else {
+        return false
+    }
+
+    return response == "y" || response == "yes"
+}
+
+func setupCIScripts() throws {
+    print("")
+    printInfo("☁️  Installing Xcode Cloud ci_scripts/...")
+
+    let sourceDir = scriptDir.appendingPathComponent("templates/ci_scripts")
+    guard fileManager.fileExists(atPath: sourceDir.path) else {
+        printWarning("   templates/ci_scripts/ not found in ARCDevTools")
+        return
+    }
+
+    let destDir = projectRoot.appendingPathComponent("ci_scripts")
+    if !fileManager.fileExists(atPath: destDir.path) {
+        try fileManager.createDirectory(at: destDir, withIntermediateDirectories: true)
+    }
+
+    let scripts = try fileManager.contentsOfDirectory(atPath: sourceDir.path)
+    for filename in scripts where filename.hasSuffix(".sh") {
+        let sourceFile = sourceDir.appendingPathComponent(filename)
+        let destFile = destDir.appendingPathComponent(filename)
+
+        try? fileManager.removeItem(at: destFile)
+        try fileManager.copyItem(at: sourceFile, to: destFile)
+        try makeExecutable(destFile)
+        printSuccess("   ci_scripts/\(filename)")
+    }
+
+    print("")
+    print("   💡 Commit ci_scripts/ to enable Xcode Cloud customization", color: Color.blue)
+    print("   📖 See docs/xcode-cloud-setup.md for workflow configuration", color: Color.blue)
+}
+
 func printFinalSuccess(projectType: ProjectType, installedSkills: [String] = []) {
     print("")
     printSuccess("ARCDevTools v\(version) configured successfully")
@@ -814,6 +856,21 @@ func main() {
 
         if shouldInstallWorkflows {
             try setupWorkflows(for: projectType)
+        }
+
+        // Handle ci_scripts installation (iOS Apps only)
+        if projectType == .iOSApp {
+            let shouldInstallCIScripts: Bool
+            if options.withWorkflows {
+                shouldInstallCIScripts = true
+            } else if options.noWorkflows {
+                shouldInstallCIScripts = false
+            } else {
+                shouldInstallCIScripts = askUserForCIScripts()
+            }
+            if shouldInstallCIScripts {
+                try setupCIScripts()
+            }
         }
 
         // Install Claude Code skills

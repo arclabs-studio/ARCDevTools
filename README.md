@@ -176,7 +176,31 @@ For project-specific SwiftLint additions, edit the copied `.swiftlint.yml` direc
 
 ---
 
-## ⚙️ GitHub Actions Workflows
+## ⚙️ CI/CD
+
+### Xcode Cloud (Recommended for iOS Apps)
+
+ARCDevTools provides `ci_scripts/` templates for [Xcode Cloud](https://developer.apple.com/documentation/xcode/xcode-cloud) — Apple's native CI/CD with 25 free compute hours/month.
+
+During setup, iOS apps are offered interactive installation:
+
+```
+Do you want to install Xcode Cloud ci_scripts/? [y/N]:
+```
+
+Or non-interactive: `./ARCDevTools/arcdevtools-setup --with-workflows`
+
+**Templates** in [`templates/ci_scripts/`](templates/ci_scripts/):
+
+| Script | When | Purpose |
+|--------|------|---------|
+| `ci_post_clone.sh` | After clone | Verify `Package.resolved`, install SwiftLint |
+| `ci_pre_xcodebuild.sh` | Before each build | Log build context (action, platform, PR/tag) |
+| `ci_post_xcodebuild.sh` | After each build | Log results (archive/test paths) |
+
+See the complete setup guide: [`docs/xcode-cloud-setup.md`](docs/xcode-cloud-setup.md)
+
+### GitHub Actions Workflows
 
 Workflows are templates adapted per project type. Choose to install them during setup.
 
@@ -202,7 +226,7 @@ Workflows are templates adapted per project type. Choose to install them during 
 
 ARCDevTools delivers Claude Code skills from two sources:
 
-### ARCKnowledge Skills (11 skills)
+### ARCKnowledge Skills (12 skills)
 
 Installed as **symlinks** from `ARCDevTools/ARCKnowledge/.claude/skills/` into your project's `.claude/skills/`. These provide progressive context loading — agents load only the standards they need for the current task.
 
@@ -212,6 +236,7 @@ Installed as **symlinks** from `ARCDevTools/ARCKnowledge/.claude/skills/` into y
 | **Implementation** | `/arc-presentation-layer`, `/arc-data-layer`, `/arc-tdd-patterns`, `/arc-worktrees-workflow`, `/arc-memory` |
 | **Review** | `/arc-final-review`, `/arc-quality-standards`, `/arc-workflow` |
 | **Audit** | `/arc-audit` |
+| **CI/CD** | `/arc-xcode-cloud` |
 
 For detailed descriptions of each skill and how they interact with other skill sources (Axiom, MCP Cupertino), see [`ARCKnowledge/Skills/skills-index.md`](ARCKnowledge/Skills/skills-index.md).
 
