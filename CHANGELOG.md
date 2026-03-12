@@ -11,6 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.0] - 2026-03-12
+
+### Added
+
+- **Xcode Cloud templates** — 3 `ci_scripts/` templates in `templates/ci_scripts/`:
+  - `ci_post_clone.sh` — installs dependencies and ARCDevTools after clone
+  - `ci_pre_xcodebuild.sh` — runs SwiftLint and SwiftFormat validation before build
+  - `ci_post_xcodebuild.sh` — post-build cleanup and artifact handling
+- **Xcode Cloud setup guide** — new `docs/xcode-cloud-setup.md` with complete step-by-step integration instructions
+- **ARCKnowledge submodule updated** to v2.8.0
+
+### Changed
+
+- **`arcdevtools-setup` script** — added Xcode Cloud detection and `ci_scripts/` installation for iOS App projects
+- **`docs/ci-cd.md`** — extended with Xcode Cloud section alongside GitHub Actions docs
+- **`README.md`** — updated to document Xcode Cloud support and new `ci_scripts/` templates
+- **`CLAUDE.md`** — updated agent instructions to reflect Xcode Cloud additions
+
+### Fixed
+
+- **SwiftFormat config** — changed `--type-attributes` back to `prev-line` so `@MainActor`, `@Observable`, and other type-level attributes appear on their own line before `class`/`struct`/`actor` declarations
+
+---
+
 ## [2.7.6] - 2026-03-04
 
 ### Fixed
@@ -345,7 +369,12 @@ git commit -m "chore: integrate ARCDevTools v1.0"
 
 ---
 
-[Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.2...HEAD
+[Unreleased]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.8.0...HEAD
+[2.8.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.6...v2.8.0
+[2.7.6]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.5...v2.7.6
+[2.7.5]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.4...v2.7.5
+[2.7.4]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.3...v2.7.4
+[2.7.3]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.2...v2.7.3
 [2.7.2]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.1...v2.7.2
 [2.7.1]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.7.0...v2.7.1
 [2.7.0]: https://github.com/arclabs-studio/ARCDevTools/compare/v2.6.0...v2.7.0
