@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.9.0] - 2026-03-14
+
+### Added
+- **Agent symlink installation** — `arcdevtools-setup` now symlinks ARCKnowledge agents into `.claude/agents/` following the same pattern as skills. Projects gain 4 new autonomous agents automatically on re-setup:
+  - `arc-testflight` — beta build distribution to TestFlight
+  - `arc-aso` — App Store Optimization orchestration
+  - `arc-swiftdata-migration` — high-risk schema migration with test-first enforcement
+  - `arc-dependency-auditor` — read-only SPM ecosystem audit
+
+### Changed
+- **ARCKnowledge submodule** updated to v2.9.0
+- **arcdevtools-setup version** bumped to 1.1.0
+
+---
+
 ## [2.8.0] - 2026-03-12
 
 ### Added

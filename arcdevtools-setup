@@ -11,7 +11,7 @@ import Foundation
 
 // MARK: - Constants
 
-let version = "1.0.0"
+let version = "1.1.0"
 
 // MARK: - Project Type Detection
 
@@ -726,6 +726,78 @@ func calculateRelativePath(from source: URL, to target: URL) -> String {
     return "../../\(arcDevToolsName)/ARCKnowledge/.claude/skills/\(skillName)"
 }
 
+func setupClaudeAgents() throws -> [String] {
+    print("")
+    printInfo("🤖 Installing Claude Code agents...")
+
+    let agentsDir = projectRoot.appendingPathComponent(".claude/agents")
+    try? fileManager.createDirectory(at: agentsDir, withIntermediateDirectories: true)
+
+    var installedAgents: [String] = []
+    var symlinkedAgents: [String] = []
+
+    let arcDevToolsName = scriptDir.lastPathComponent
+    let arcKnowledgeAgentsSource = scriptDir.appendingPathComponent("ARCKnowledge/.claude/agents")
+
+    guard fileManager.fileExists(atPath: arcKnowledgeAgentsSource.path) else {
+        printWarning("   ARCKnowledge/.claude/agents/ not found — skipping agents")
+        return []
+    }
+
+    let agentFiles = try fileManager.contentsOfDirectory(atPath: arcKnowledgeAgentsSource.path)
+    for filename in agentFiles where filename.hasSuffix(".md") && filename.hasPrefix("arc-") {
+        let destFile = agentsDir.appendingPathComponent(filename)
+
+        // Skip if already exists (project-local agent takes priority)
+        if fileManager.fileExists(atPath: destFile.path) {
+            printWarning("   \(filename) already exists — skipping")
+            continue
+        }
+
+        let relativePath = "../../\(arcDevToolsName)/ARCKnowledge/.claude/agents/\(filename)"
+
+        try? fileManager.removeItem(at: destFile)
+        try fileManager.createSymbolicLink(atPath: destFile.path, withDestinationPath: relativePath)
+
+        installedAgents.append(filename)
+        symlinkedAgents.append(filename)
+        printSuccess("   \(filename) (linked)")
+    }
+
+    if !symlinkedAgents.isEmpty {
+        try updateGitignoreWithAgents(symlinkedAgents)
+    }
+
+    if installedAgents.isEmpty {
+        printWarning("   No agents found to install")
+    }
+
+    return installedAgents
+}
+
+func updateGitignoreWithAgents(_ agents: [String]) throws {
+    let gitignorePath = projectRoot.appendingPathComponent(".gitignore")
+
+    var gitignoreContent = ""
+    if fileManager.fileExists(atPath: gitignorePath.path) {
+        gitignoreContent = try String(contentsOf: gitignorePath, encoding: .utf8)
+    }
+
+    let agentsHeader = "# ARCKnowledge agents (symlinks)"
+    if gitignoreContent.contains(agentsHeader) {
+        return
+    }
+
+    var agentsSection = "\n\n\(agentsHeader)\n"
+    for agent in agents.sorted() {
+        agentsSection += ".claude/agents/\(agent)\n"
+    }
+
+    gitignoreContent += agentsSection
+    try gitignoreContent.write(to: gitignorePath, atomically: true, encoding: .utf8)
+    printSuccess("   .gitignore updated with symlinked agents")
+}
+
 func askUserForWorkflows() -> Bool {
     print("")
     print("Do you want to copy GitHub Actions workflows? [y/N]: ", terminator: "")
@@ -779,7 +851,7 @@ func setupCIScripts() throws {
     print("   📖 See docs/xcode-cloud-setup.md for workflow configuration", color: Color.blue)
 }
 
-func printFinalSuccess(projectType: ProjectType, installedSkills: [String] = []) {
+func printFinalSuccess(projectType: ProjectType, installedSkills: [String] = [], installedAgents: [String] = []) {
     print("")
     printSuccess("ARCDevTools v\(version) configured successfully")
     print("")
@@ -796,6 +868,14 @@ func printFinalSuccess(projectType: ProjectType, installedSkills: [String] = [])
         print("🤖 Claude Code skills installed:", color: Color.blue)
         for skill in installedSkills {
             print("   • \(skill)")
+        }
+        print("")
+    }
+
+    if !installedAgents.isEmpty {
+        print("🤖 Claude Code agents installed:", color: Color.blue)
+        for agent in installedAgents {
+            print("   • \(agent)")
         }
         print("")
     }
@@ -876,7 +956,10 @@ func main() {
         // Install Claude Code skills
         let installedSkills = try setupClaudeSkills()
 
-        printFinalSuccess(projectType: projectType, installedSkills: installedSkills)
+        // Install Claude Code agents
+        let installedAgents = try setupClaudeAgents()
+
+        printFinalSuccess(projectType: projectType, installedSkills: installedSkills, installedAgents: installedAgents)
 
     } catch {
         print("")
