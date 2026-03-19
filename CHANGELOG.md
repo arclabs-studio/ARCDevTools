@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.10.0] - 2026-03-20
+
+### Changed
+- **ARCKnowledge submodule** updated to v2.10.0
+
+---
+
 ## [2.9.0] - 2026-03-14
 
 ### Added
