@@ -71,6 +71,73 @@ find_arcknowledge() {
     return 1
 }
 
+# Find ARCDistribution directory (optional — provides ASO skills)
+find_arcdistribution() {
+    local project_root="$1"
+    local possible_paths=(
+        # Sibling packages directory (Packages/ARCDistribution)
+        "$(dirname "$project_root")/ARCDistribution"
+        # Direct submodule
+        "$project_root/ARCDistribution"
+        # Inside Dependencies
+        "$project_root/Dependencies/ARCDistribution"
+        # SPM checkouts
+        "$project_root/.build/checkouts/ARCDistribution"
+        # Absolute Packages path
+        "$HOME/Developer/ARCLabsStudio/Packages/ARCDistribution"
+    )
+
+    for path in "${possible_paths[@]}"; do
+        if [[ -d "$path/.claude/skills" ]]; then
+            echo "$path"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+# Link skills from a given source directory into the target skills dir
+link_skills_from() {
+    local skills_source="$1"
+    local skills_target="$2"
+    local source_label="$3"
+    local linked=0
+    local skipped=0
+    local updated=0
+
+    for skill_dir in "$skills_source"/*/; do
+        if [[ -d "$skill_dir" ]]; then
+            skill_name=$(basename "$skill_dir")
+            target_link="$skills_target/$skill_name"
+            rel_path=$(relative_path "$skills_target" "$skill_dir")
+            rel_path="${rel_path%/}"
+
+            if [[ -L "$target_link" ]]; then
+                current_target=$(readlink "$target_link")
+                if [[ "$current_target" == "$rel_path" ]]; then
+                    log_info "  $skill_name → already linked ($source_label)"
+                    ((skipped++)) || true
+                else
+                    rm "$target_link"
+                    ln -s "$rel_path" "$target_link"
+                    log_success "  $skill_name → updated ($source_label)"
+                    ((updated++)) || true
+                fi
+            elif [[ -e "$target_link" ]]; then
+                log_warning "  $skill_name → skipped (file/directory exists)"
+                ((skipped++)) || true
+            else
+                ln -s "$rel_path" "$target_link"
+                log_success "  $skill_name → linked ($source_label)"
+                ((linked++)) || true
+            fi
+        fi
+    done
+
+    echo "  $source_label: +$linked linked, $updated updated, $skipped skipped"
+}
+
 # Get relative path from source to target
 relative_path() {
     local source="$1"
@@ -129,51 +196,26 @@ main() {
     log_info "Linking skills..."
     echo ""
 
-    # Create symlinks for each skill
-    for skill_dir in "$SKILLS_SOURCE"/*/; do
-        if [[ -d "$skill_dir" ]]; then
-            skill_name=$(basename "$skill_dir")
-            target_link="$SKILLS_TARGET/$skill_name"
+    # Link ARCKnowledge skills
+    link_skills_from "$SKILLS_SOURCE" "$SKILLS_TARGET" "ARCKnowledge"
 
-            # Calculate relative path for symlink
-            rel_path=$(relative_path "$SKILLS_TARGET" "$skill_dir")
-            # Remove trailing slash
-            rel_path="${rel_path%/}"
-
-            if [[ -L "$target_link" ]]; then
-                # Symlink exists, check if it points to the right place
-                current_target=$(readlink "$target_link")
-                if [[ "$current_target" == "$rel_path" ]]; then
-                    log_info "  $skill_name → already linked"
-                    ((skills_skipped++))
-                else
-                    # Update symlink
-                    rm "$target_link"
-                    ln -s "$rel_path" "$target_link"
-                    log_success "  $skill_name → updated"
-                    ((skills_updated++))
-                fi
-            elif [[ -e "$target_link" ]]; then
-                # Something exists but it's not a symlink
-                log_warning "  $skill_name → skipped (file/directory exists)"
-                ((skills_skipped++))
-            else
-                # Create new symlink
-                ln -s "$rel_path" "$target_link"
-                log_success "  $skill_name → linked"
-                ((skills_linked++))
-            fi
+    # Link ARCDistribution skills (optional — ASO + distribution skills)
+    ARCDISTRIBUTION_PATH=$(find_arcdistribution "$PROJECT_ROOT") || true
+    if [[ -n "$ARCDISTRIBUTION_PATH" ]]; then
+        DISTRIBUTION_SKILLS_SOURCE="$ARCDISTRIBUTION_PATH/.claude/skills"
+        if [[ -d "$DISTRIBUTION_SKILLS_SOURCE" ]]; then
+            log_success "Found ARCDistribution: $ARCDISTRIBUTION_PATH"
+            link_skills_from "$DISTRIBUTION_SKILLS_SOURCE" "$SKILLS_TARGET" "ARCDistribution"
         fi
-    done
+    else
+        log_info "ARCDistribution not found — ASO skills skipped"
+        log_info "  To enable: clone ARCDistribution to $(dirname "$PROJECT_ROOT")/ARCDistribution"
+    fi
 
     echo ""
     echo "════════════════════════════════════════════════════════════════"
     echo ""
     log_success "Skills setup complete!"
-    echo ""
-    echo "  New links:     $skills_linked"
-    echo "  Updated:       $skills_updated"
-    echo "  Skipped:       $skills_skipped"
     echo ""
 
     # Verify skills are accessible
