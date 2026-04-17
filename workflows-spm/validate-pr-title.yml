@@ -1,0 +1,52 @@
+name: Validate PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr-title:
+    name: Validate PR Title Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate title format
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "PR Title: $PR_TITLE"
+          echo ""
+
+          # Format 1: Linear ticket — [TEAM-123] Description
+          LINEAR_PATTERN='^(\[[A-Z]+-[0-9]+\]) .{5,}'
+
+          # Format 2: Conventional Commits — type(scope): description
+          CONVENTIONAL_PATTERN='^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\(.+\))?!?: .{5,}'
+
+          if [[ "$PR_TITLE" =~ $LINEAR_PATTERN ]]; then
+            echo "✅ Valid format (Linear): $PR_TITLE"
+            exit 0
+          fi
+
+          if [[ "$PR_TITLE" =~ $CONVENTIONAL_PATTERN ]]; then
+            echo "✅ Valid format (Conventional Commits): $PR_TITLE"
+            exit 0
+          fi
+
+          echo "❌ PR title does not match required format."
+          echo ""
+          echo "Use one of the following formats:"
+          echo ""
+          echo "  With Linear ticket:"
+          echo "    [TEAM-123] Short description of the change"
+          echo ""
+          echo "  Without Linear ticket (Conventional Commits):"
+          echo "    type(scope): short description"
+          echo ""
+          echo "  Valid types: feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert"
+          echo ""
+          echo "  Examples:"
+          echo "    [FVRS-189] Revert glass-on-glass overlays and add page indicator fallback"
+          echo "    fix(ui): revert glass-on-glass overlays and add page indicator fallback"
+          echo "    feat(auth): add biometric login support"
+          exit 1
