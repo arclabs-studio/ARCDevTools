@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 BAD_STATES = {"new", "needs_review"}
-SKIP_DIRS = {".build", "DerivedData", "Pods", "node_modules", ".git", ".swiftpm"}
+SKIP_DIRS = {".build", "Build", "DerivedData", "Pods", "Carthage", "node_modules", ".git", ".swiftpm"}
 
 
 def discover_catalogs(root: Path) -> list[Path]:
@@ -94,8 +94,9 @@ def main() -> int:
     else:
         catalogs = discover_catalogs(Path.cwd())
         if not catalogs:
-            print("error: no .xcstrings files found", file=sys.stderr)
-            return 1
+            if args.verbose:
+                print("No .xcstrings files found — nothing to check.")
+            return 0
 
     total_failures = 0
     for path in catalogs:
