@@ -109,7 +109,13 @@ Installs Claude Code skills for ARCDevTools workflows.
 
 Checks String Catalog (`*.xcstrings`) completeness for required locales. Fails (exit 1) when any key is missing a translation or is in `new` / `needs_review` state.
 
-Auto-discovers all `.xcstrings` files from the working directory (skipping `.build`, `DerivedData`, `Pods`, `node_modules`, `.swiftpm`, `.git`). Pass `--catalog` to scope to a single file.
+Auto-discovers all `.xcstrings` files from the working directory (skipping `.build`, `Build`, `DerivedData`, `Pods`, `Carthage`, `node_modules`, `.swiftpm`, `.git`). Pass `--catalog` to scope to a single file.
+
+**When to use:**
+
+- **iOS apps with String Catalogs** — add `lint-l10n` to your Makefile (see below). Wire it into `lint:` so CI catches missing translations.
+- **SPM packages** — skip this script. ARC packages are text-agnostic: they use `LocalizedStringKey` literals with English defaults; the consuming app's String Catalog resolves translations. Running the script in a package project is safe (exits 0 silently when no catalogs are found), but there is nothing to check.
+- **Unsure?** — run bare with no flags. If no `.xcstrings` files exist, the script exits 0 and does nothing.
 
 **Usage:**
 
