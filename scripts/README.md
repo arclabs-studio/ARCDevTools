@@ -156,6 +156,22 @@ lint: lint-l10n
 
 ---
 
+### `key-obfuscator.swift`
+
+Generates a lightly-obfuscated `[UInt8]` literal for a **client-public** key
+(e.g. a RevenueCat or Firebase SDK key) so it does not appear as a plain `String`
+in the binary. Reconstruct at runtime with `ARCStorage.ConfigurationValue.deobfuscated(_:)`.
+
+> ⚠️ Light obfuscation only — a speed-bump against casual scraping, **not** a
+> secret store. Never use it for real secrets; see `ARCKnowledge/Quality/api-keys.md`.
+
+**Usage:**
+```bash
+swift scripts/key-obfuscator.swift "appl_yourKey" --name rcAPIKey
+```
+
+---
+
 ## GitHub Actions Scripts
 
 See `scripts/github-actions/README.md` for automation scripts related to GitHub Actions workflows.
