@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "If .swift files were edited during this session, verify the project compiles by running 'swift build'. Do NOT run tests -- that is handled by pre-push hooks. Only check compilation.",
+            "prompt": "If .swift files were edited during this session, verify they compile. If a Package.swift exists at the repo root, run 'swift build'. If there is NO Package.swift (e.g. a tooling/config repo like ARCDevTools where .swift files are standalone scripts), do NOT run 'swift build' -- it cannot succeed; instead verify each edited file with 'swiftc -typecheck <file>'. Do NOT run tests -- that is handled by pre-push hooks. Only check compilation.",
             "model": "claude-haiku-4-5"
           }
         ]

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`scripts/key-obfuscator.swift`** — codegen for light obfuscation of client-public keys; emits a `[UInt8]` literal reconstructed at runtime via `ARCStorage.ConfigurationValue.deobfuscated(_:)`.
+- **ARCKnowledge: `Quality/api-keys.md`** — client secrets & API keys standard (real-secret vs client-public decision tree, xcconfig → Info.plist → `ConfigurationValue`, optional obfuscation, provider key restrictions). Wired into the `arc-quality-standards` skill.
+
 ---
 
 ## [2.13.1] - 2026-03-28
