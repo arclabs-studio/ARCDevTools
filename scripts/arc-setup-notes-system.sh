@@ -52,8 +52,13 @@ log_debug()   { [[ "${VERBOSE:-0}" == "1" ]] && echo "${C_DIM}.. $*${C_RESET}" |
 # -----------------------------------------------------------------------------
 PROJECT_NAME=""
 REPO_ROOT=""
+VAULT_BASE=""
 DRY_RUN=0
 VERBOSE=0
+
+# Default vault base (overridable via --vault-base or $ARC_NOTES_VAULT_BASE).
+# Keep as literal — expanded after parsing so env var wins.
+DEFAULT_VAULT_BASE='$HOME/ObsidianVault'
 
 usage() {
     cat <<USAGE
@@ -64,27 +69,45 @@ Bootstrap the ARC notes/Obsidian system in the current repository.
 Options:
   --name <ProjectName>   Override detected project name (default: git-derived)
   --root <path>          Repository root (default: current git toplevel)
+  --vault-base <path>    Obsidian vault base directory
+                         (default: \$ARC_NOTES_VAULT_BASE or \$HOME/ObsidianVault)
   --dry-run              Show what would be done without writing anything
   --verbose              Verbose logging
   -h, --help             Show this help
 
+Environment:
+  ARC_NOTES_VAULT_BASE   Same as --vault-base. Also honored at hook runtime
+                         by the generated .claude/hooks/setup-notes.sh.
+
 Examples:
   $(basename "$0")
   $(basename "$0") --name FavRes
+  $(basename "$0") --vault-base ~/Obsidian/Work
+  ARC_NOTES_VAULT_BASE=~/Obsidian/Work $(basename "$0")
   $(basename "$0") --root ~/Developer/Apps/FavRes-iOS --dry-run
 USAGE
 }
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --name)     PROJECT_NAME="${2:?--name requires a value}"; shift 2 ;;
-        --root)     REPO_ROOT="${2:?--root requires a value}"; shift 2 ;;
-        --dry-run)  DRY_RUN=1; shift ;;
-        --verbose)  VERBOSE=1; shift ;;
-        -h|--help)  usage; exit 0 ;;
-        *)          log_error "Unknown argument: $1"; usage; exit 2 ;;
+        --name)       PROJECT_NAME="${2:?--name requires a value}"; shift 2 ;;
+        --root)       REPO_ROOT="${2:?--root requires a value}"; shift 2 ;;
+        --vault-base) VAULT_BASE="${2:?--vault-base requires a value}"; shift 2 ;;
+        --dry-run)    DRY_RUN=1; shift ;;
+        --verbose)    VERBOSE=1; shift ;;
+        -h|--help)    usage; exit 0 ;;
+        *)            log_error "Unknown argument: $1"; usage; exit 2 ;;
     esac
 done
+
+# Resolve vault base: --vault-base > $ARC_NOTES_VAULT_BASE > default.
+# Default is kept as literal '$HOME/...' so it lands verbatim in the generated
+# hook (where bash expands it at runtime, per-machine).
+if [[ -z "$VAULT_BASE" ]]; then
+    VAULT_BASE="${ARC_NOTES_VAULT_BASE:-$DEFAULT_VAULT_BASE}"
+fi
+# Expand for local use in this script only.
+VAULT_BASE_EXPANDED="$(eval echo "$VAULT_BASE")"
 
 # -----------------------------------------------------------------------------
 # Resolve repo root and project name
@@ -107,7 +130,7 @@ if [[ -z "$PROJECT_NAME" ]]; then
     PROJECT_NAME="${PROJECT_NAME%-macOS}"
 fi
 
-VAULT_PATH="$HOME/Documents/ObsidianVault/01 - Projects/$PROJECT_NAME"
+VAULT_PATH="$VAULT_BASE_EXPANDED/01 - Projects/$PROJECT_NAME"
 HOOKS_DIR="$REPO_ROOT/.claude/hooks"
 GITIGNORE="$REPO_ROOT/.gitignore"
 
@@ -117,6 +140,7 @@ echo " ARC Notes System Bootstrap"
 echo "================================================================"
 log_info "Repo root:    $REPO_ROOT"
 log_info "Project name: $PROJECT_NAME"
+log_info "Vault base:   $VAULT_BASE"
 log_info "Vault path:   $VAULT_PATH"
 [[ $DRY_RUN -eq 1 ]] && log_warn "DRY RUN — no files will be written"
 echo
@@ -131,15 +155,18 @@ echo
 render_setup_notes() {
     local out="$1"
     local name="$2"
+    local vault_base="$3"
     cat > "$out" <<'TEMPLATE'
 #!/bin/bash
 # ARC Labs Studio - setup-notes.sh
 # Idempotent. Creates `notes/` symlink to Obsidian vault.
 # Cross-machine: uses $HOME, not hardcoded user.
-# Requires vault at $HOME/Documents/ObsidianVault/01 - Projects/__ARC_PROJECT_NAME__
+# Vault base override at runtime: export ARC_NOTES_VAULT_BASE=/path/to/vault
+# Default: __ARC_VAULT_BASE__/01 - Projects/__ARC_PROJECT_NAME__
 set -e
 PROJECT_NAME="__ARC_PROJECT_NAME__"
-VAULT_PATH="$HOME/Documents/ObsidianVault/01 - Projects/$PROJECT_NAME"
+VAULT_BASE="${ARC_NOTES_VAULT_BASE:-__ARC_VAULT_BASE__}"
+VAULT_PATH="$VAULT_BASE/01 - Projects/$PROJECT_NAME"
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$REPO_ROOT"
 if [ -L "notes" ]; then exit 0; fi
@@ -154,12 +181,15 @@ fi
 ln -s "$VAULT_PATH" notes
 echo "[setup-notes] linked notes -> $VAULT_PATH"
 TEMPLATE
-    # Substitute project name placeholder (use | as delimiter to allow / etc.)
+    # Substitute placeholders (use | as delimiter to allow / etc.)
     # Use a portable in-place edit (BSD sed needs '' after -i)
+    # Escape | in replacement values to avoid breaking sed.
+    local name_esc="${name//|/\\|}"
+    local base_esc="${vault_base//|/\\|}"
     if sed --version >/dev/null 2>&1; then
-        sed -i "s|__ARC_PROJECT_NAME__|${name}|g" "$out"
+        sed -i "s|__ARC_PROJECT_NAME__|${name_esc}|g; s|__ARC_VAULT_BASE__|${base_esc}|g" "$out"
     else
-        sed -i '' "s|__ARC_PROJECT_NAME__|${name}|g" "$out"
+        sed -i '' "s|__ARC_PROJECT_NAME__|${name_esc}|g; s|__ARC_VAULT_BASE__|${base_esc}|g" "$out"
     fi
 }
 
@@ -192,19 +222,16 @@ TEMPLATE
 }
 
 # Render to a temp file and compare; only overwrite if different.
+# Usage: maybe_install <target> <renderer> [renderer-arg ...]
 maybe_install() {
     local target="$1"
-    local renderer="$2"   # function name
-    local arg2="${3:-}"   # optional second arg passed to renderer
+    local renderer="$2"
+    shift 2
     local label="${target#$REPO_ROOT/}"
 
     local tmp
     tmp="$(mktemp)"
-    if [[ -n "$arg2" ]]; then
-        "$renderer" "$tmp" "$arg2"
-    else
-        "$renderer" "$tmp"
-    fi
+    "$renderer" "$tmp" "$@"
 
     if [[ -f "$target" ]] && cmp -s "$tmp" "$target"; then
         rm -f "$tmp"
@@ -232,7 +259,7 @@ log_info "Step 1/3 - Hooks"
 setup_path="$HOOKS_DIR/setup-notes.sh"
 sync_path="$HOOKS_DIR/sync-plans.sh"
 
-maybe_install "$setup_path" render_setup_notes "$PROJECT_NAME"
+maybe_install "$setup_path" render_setup_notes "$PROJECT_NAME" "$VAULT_BASE"
 maybe_install "$sync_path"  render_sync_plans
 
 # -----------------------------------------------------------------------------
