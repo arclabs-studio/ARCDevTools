@@ -1,47 +1,72 @@
 #!/bin/bash
 
 # ARCDevTools Pre-push Hook
-# Runs tests before pushing to remote
-# Supports both SPM packages (Package.swift) and Xcode projects (.xcodeproj)
+# Runs fast, environment-stable quality checks before pushing to remote.
+#
+# Scope: SwiftLint + SwiftFormat validation only. Tests are NOT run here —
+# `xcodebuild test` / `swift test` are slow and environment-fragile (SPM
+# resolution failures would block pushes). Test gating belongs in CI.
+#
+# Bypass: `SKIP_HOOKS=1 git push` (NOT recommended — CI runs the same checks).
 
-echo "🚀 Pre-push: Running tests..."
-
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-
-if [ -f "$REPO_ROOT/Makefile" ]; then
-    # Prefer Makefile — it already has the correct test command for the project type
-    make -C "$REPO_ROOT" test
-elif [ -f "$REPO_ROOT/Package.swift" ]; then
-    # SPM package
-    swift test --parallel --package-path "$REPO_ROOT"
-else
-    # Look for .xcodeproj in repo root or one level deep
-    XCODEPROJ=$(find "$REPO_ROOT" -maxdepth 2 -name "*.xcodeproj" -not -path "*/DerivedData/*" | head -1)
-    if [ -n "$XCODEPROJ" ]; then
-        SCHEME=$(basename "$XCODEPROJ" .xcodeproj)
-        xcodebuild test \
-            -project "$XCODEPROJ" \
-            -scheme "$SCHEME" \
-            -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=latest" \
-            -configuration Debug \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            -quiet
-    else
-        echo "⚠️  No Package.swift, Makefile, or .xcodeproj found. Skipping tests."
-        exit 0
-    fi
+if [ "$SKIP_HOOKS" = "1" ]; then
+    echo ""
+    echo "⚠️  Pre-push checks skipped (SKIP_HOOKS=1)."
+    echo "    CI will run the same checks and reject the PR if there are violations."
+    echo ""
+    exit 0
 fi
 
-TEST_EXIT_CODE=$?
+echo "🚀 Pre-push: Running quality checks..."
 
-if [ $TEST_EXIT_CODE -ne 0 ]; then
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT" || exit 1
+
+FAILED=0
+
+# 1. SwiftFormat (lint mode — no auto-fix)
+if command -v swiftformat >/dev/null 2>&1; then
     echo ""
-    echo "❌ Tests failed. Push aborted."
-    echo "💡 Fix failing tests or use --no-verify to bypass (not recommended)"
+    echo "  Checking formatting (SwiftFormat)..."
+    if [ -f ".swiftformat" ]; then
+        if swiftformat --lint --config .swiftformat . >/dev/null 2>&1; then
+            echo "  ✅ SwiftFormat passed"
+        else
+            echo "  ❌ SwiftFormat found unformatted files"
+            FAILED=1
+        fi
+    else
+        echo "  No .swiftformat config found, skipping..."
+    fi
+else
+    echo "  SwiftFormat not installed (brew install swiftformat), skipping..."
+fi
+
+# 2. SwiftLint (strict mode)
+if command -v swiftlint >/dev/null 2>&1; then
+    echo ""
+    echo "  Running SwiftLint..."
+    if [ -f ".swiftlint.yml" ]; then
+        if swiftlint lint --config .swiftlint.yml --strict --quiet; then
+            echo "  ✅ SwiftLint passed"
+        else
+            FAILED=1
+        fi
+    else
+        echo "  No .swiftlint.yml config found, skipping..."
+    fi
+else
+    echo "  SwiftLint not installed (brew install swiftlint), skipping..."
+fi
+
+if [ "$FAILED" -ne 0 ]; then
+    echo ""
+    echo "❌ Quality checks failed. Push aborted."
+    echo "💡 Fix the violations above, or run 'make fix' to auto-format."
+    echo "   Use 'SKIP_HOOKS=1 git push' to bypass (NOT recommended)."
     exit 1
 fi
 
-echo "✅ All tests passed. Proceeding with push."
+echo ""
+echo "✅ Quality checks passed. Proceeding with push."
 exit 0

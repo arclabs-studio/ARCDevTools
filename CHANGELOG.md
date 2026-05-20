@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`scripts/key-obfuscator.swift`** — codegen for light obfuscation of client-public keys; emits a `[UInt8]` literal reconstructed at runtime via `ARCStorage.ConfigurationValue.deobfuscated(_:)`.
 - **ARCKnowledge: `Quality/api-keys.md`** — client secrets & API keys standard (real-secret vs client-public decision tree, xcconfig → Info.plist → `ConfigurationValue`, optional obfuscation, provider key restrictions). Wired into the `arc-quality-standards` skill.
 
+### Changed
+- **Pre-push hook** — no longer runs tests. Now runs SwiftLint (strict) and SwiftFormat (`--lint`) only; `xcodebuild test` / `swift test` were slow and environment-fragile (SPM resolution failures blocked pushes). Test gating stays in CI.
+- **PR title standard** — adopted `[CATEGORY][TICKET-ID] Description` (category mandatory: `FEATURE`/`BUGFIX`/`HOTFIX`/`DOCS`/`CHORE`; ticket optional). `validate-pr-title.yml`, the `arc-pr-publisher` / `arc-release-orchestrator` agents, and the `arc-workflow` skill docs were updated; bare conventional-commits titles are no longer accepted.
+- **Xcode tooling docs** — instructional snippets that told Claude/devs to run `xcodebuild` locally now point to the Xcode MCP (`arc-mcp-xcode` skill) as the preferred interactive path; CI workflows and Xcode Cloud scripts are unchanged.
+
 ---
 
 ## [2.13.1] - 2026-03-28
