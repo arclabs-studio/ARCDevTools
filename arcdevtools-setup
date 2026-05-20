@@ -343,6 +343,10 @@ func generateMakefile(for projectType: ProjectType) throws {
         makefileContent = """
 # ARCDevTools Makefile (Swift Package)
 # Auto-generated - Do not edit manually
+#
+# build/test targets shell out to `swift` for CI and headless use.
+# For interactive build, test, and diagnostics, prefer the Xcode MCP
+# (see the `arc-mcp-xcode` skill) over running these targets by hand.
 
 .PHONY: help lint format fix build test setup hooks clean
 
@@ -406,6 +410,10 @@ clean:
         makefileContent = """
 # ARCDevTools Makefile (iOS App)
 # Auto-generated - Do not edit manually
+#
+# build/test targets shell out to `xcodebuild` for CI and headless use.
+# For interactive build, test, and diagnostics, prefer the Xcode MCP
+# (see the `arc-mcp-xcode` skill) over running these targets by hand.
 
 \(schemeNote)
 DESTINATION ?= platform=iOS Simulator,name=iPhone 16,OS=latest

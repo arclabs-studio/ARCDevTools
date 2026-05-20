@@ -31,6 +31,10 @@ ARCDevTools standardizes development tooling across all ARC Labs projects. Add i
 
 The setup script detects your project type automatically.
 
+> The `make build` / `make test` targets shell out to `swift` / `xcodebuild`
+> for CI and headless use. For interactive build, test, and diagnostics, prefer
+> the Xcode MCP (see the `arc-mcp-xcode` skill).
+
 ---
 
 ## 📋 Requirements
