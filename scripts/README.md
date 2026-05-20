@@ -105,6 +105,60 @@ Installs Claude Code skills for ARCDevTools workflows.
 
 ---
 
+### `arc-setup-notes-system.sh`
+
+Bootstraps the ARC notes/Obsidian system in any ARC repo. Creates
+`.claude/hooks/setup-notes.sh` (creates the `notes/` symlink to the project's
+Obsidian vault folder) and `.claude/hooks/sync-plans.sh` (Stop hook that
+archives Claude plans). Appends `notes` to `.gitignore`. Idempotent.
+
+**What it does:**
+- Detects project name from `git rev-parse --show-toplevel` (strips
+  `-iOS` / `-Android` / `-Web` / `-macOS` suffix)
+- Writes both hook scripts (skips if already up-to-date)
+- Adds `notes` to `.gitignore` if missing
+- Runs `setup-notes.sh` to create the symlink when the vault folder exists
+- Prints next steps for wiring the hooks into `.claude/settings.local.json`
+
+**Cross-machine safe:** generated hooks resolve `$HOME` at runtime; never
+hardcode the current user. Re-run after every clone or worktree creation.
+
+**Usage:**
+```bash
+./scripts/arc-setup-notes-system.sh                       # auto-detect
+./scripts/arc-setup-notes-system.sh --name FavRes         # explicit name
+./scripts/arc-setup-notes-system.sh --root ~/path --dry-run
+./scripts/arc-setup-notes-system.sh --verbose
+```
+
+---
+
+### `arc-memory-prune.sh`
+
+Audits Claude Code's auto-memory directories
+(`~/.claude/projects/*/memory/`) and reports stale entries (default: not
+modified in more than 60 days). Read-only by default.
+
+**What it does:**
+- Walks every project under `$HOME/.claude/projects/`
+- Color-codes each file by age (green < 30d, yellow 30-60d, red >= 60d)
+- Parses `name:` and `description:` from frontmatter when present
+- Reports per-project totals (file count, stale count, oldest, total size)
+- With `--delete`, prompts per-file before removing (skip prompts with `--yes`)
+
+**Cross-machine safe:** scans only the current user's `~/.claude` tree.
+
+**Usage:**
+```bash
+./scripts/arc-memory-prune.sh                  # report only
+./scripts/arc-memory-prune.sh --days 90        # custom threshold
+./scripts/arc-memory-prune.sh --verbose        # show all files, not just stale
+./scripts/arc-memory-prune.sh --delete         # interactive prune
+./scripts/arc-memory-prune.sh --delete --yes   # non-interactive prune
+```
+
+---
+
 ### `check-localization.py`
 
 Checks String Catalog (`*.xcstrings`) completeness for required locales. Fails (exit 1) when any key is missing a translation or is in `new` / `needs_review` state.
