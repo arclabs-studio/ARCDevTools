@@ -11,7 +11,7 @@ import Foundation
 
 // MARK: - Constants
 
-let version = "1.1.0"
+let version = "1.2.0"
 
 // MARK: - Project Type Detection
 
@@ -33,6 +33,7 @@ struct Options {
     var withWorkflows: Bool = false
     var noWorkflows: Bool = false
     var showHelp: Bool = false
+    var force: Bool = false
 
     var isInteractive: Bool {
         !withWorkflows && !noWorkflows
@@ -49,6 +50,8 @@ func parseArguments() -> Options {
             options.withWorkflows = true
         case "--no-workflows":
             options.noWorkflows = true
+        case "--force", "-f":
+            options.force = true
         case "--help", "-h":
             options.showHelp = true
         default:
@@ -68,12 +71,20 @@ func printHelp() {
     print("Options:")
     print("  --with-workflows  Install GitHub Actions workflows (non-interactive)")
     print("  --no-workflows    Skip GitHub Actions workflows (non-interactive)")
+    print("  --force, -f       Overwrite project-owned configs (.swiftlint.yml, .swiftformat)")
+    print("                    Studio-owned configs (.swiftlint.base.yml) always refresh.")
     print("  --help, -h        Show this help message")
     print("")
     print("Examples:")
     print("  ./ARCDevTools/arcdevtools-setup                  # Interactive mode")
     print("  ./ARCDevTools/arcdevtools-setup --with-workflows # CI mode with workflows")
     print("  ./ARCDevTools/arcdevtools-setup --no-workflows   # CI mode without workflows")
+    print("  ./ARCDevTools/arcdevtools-setup --force          # Reset .swiftlint.yml + .swiftformat")
+    print("")
+    print("Config contract:")
+    print("  .swiftlint.base.yml — studio rules, refreshed every run (do not edit)")
+    print("  .swiftlint.yml      — project-owned (paths + local tweaks), kept on re-run")
+    print("  .swiftformat        — project-owned, kept on re-run")
     print("")
 }
 
@@ -240,28 +251,47 @@ func setupSwiftVersion() throws {
     printSuccess("   .swift-version (6.0)")
 }
 
-func setupConfigs() throws {
+func setupConfigs(force: Bool) throws {
     print("")
     printInfo("📦 Copying configurations...")
 
-    // SwiftLint
-    let swiftlintSource = scriptDir.appendingPathComponent("configs/swiftlint.yml")
-    if fileManager.fileExists(atPath: swiftlintSource.path) {
-        let dest = projectRoot.appendingPathComponent(".swiftlint.yml")
-        try? fileManager.removeItem(at: dest) // Remove if exists
-        try fileManager.copyItem(at: swiftlintSource, to: dest)
-        printSuccess("   .swiftlint.yml")
+    // SwiftLint base — studio-owned, ALWAYS refreshed.
+    let swiftlintBaseSource = scriptDir.appendingPathComponent("configs/swiftlint.base.yml")
+    if fileManager.fileExists(atPath: swiftlintBaseSource.path) {
+        let dest = projectRoot.appendingPathComponent(".swiftlint.base.yml")
+        try? fileManager.removeItem(at: dest)
+        try fileManager.copyItem(at: swiftlintBaseSource, to: dest)
+        printSuccess("   .swiftlint.base.yml (refreshed — studio rules)")
     } else {
-        printWarning("   swiftlint.yml not found in ARCDevTools")
+        printWarning("   configs/swiftlint.base.yml not found in ARCDevTools")
     }
 
-    // SwiftFormat
+    // SwiftLint project file — project-owned, skip-if-exists.
+    let swiftlintStarterSource = scriptDir.appendingPathComponent("configs/swiftlint.starter.yml")
+    if fileManager.fileExists(atPath: swiftlintStarterSource.path) {
+        let dest = projectRoot.appendingPathComponent(".swiftlint.yml")
+        if fileManager.fileExists(atPath: dest.path) && !force {
+            printInfo("   .swiftlint.yml exists — kept (re-run with --force to overwrite)")
+        } else {
+            try? fileManager.removeItem(at: dest)
+            try fileManager.copyItem(at: swiftlintStarterSource, to: dest)
+            printSuccess("   .swiftlint.yml (starter — adjust `included:` for your layout)")
+        }
+    } else {
+        printWarning("   configs/swiftlint.starter.yml not found in ARCDevTools")
+    }
+
+    // SwiftFormat — project-owned, skip-if-exists.
     let swiftformatSource = scriptDir.appendingPathComponent("configs/swiftformat")
     if fileManager.fileExists(atPath: swiftformatSource.path) {
         let dest = projectRoot.appendingPathComponent(".swiftformat")
-        try? fileManager.removeItem(at: dest) // Remove if exists
-        try fileManager.copyItem(at: swiftformatSource, to: dest)
-        printSuccess("   .swiftformat")
+        if fileManager.fileExists(atPath: dest.path) && !force {
+            printInfo("   .swiftformat exists — kept (re-run with --force to overwrite)")
+        } else {
+            try? fileManager.removeItem(at: dest)
+            try fileManager.copyItem(at: swiftformatSource, to: dest)
+            printSuccess("   .swiftformat")
+        }
     } else {
         printWarning("   swiftformat not found in ARCDevTools")
     }
@@ -867,9 +897,10 @@ func printFinalSuccess(projectType: ProjectType, installedSkills: [String] = [],
     print("")
     print("📋 Installed configurations:", color: Color.blue)
     print("   • .swift-version (v\(version))")
-    print("   • .swiftlint.yml (v\(version))")
-    print("   • .swiftformat (v\(version))")
-    print("   • Makefile (v\(version))")
+    print("   • .swiftlint.base.yml (v\(version)) — studio rules (refreshed every run)")
+    print("   • .swiftlint.yml     (v\(version)) — project-owned (paths + local tweaks)")
+    print("   • .swiftformat       (v\(version)) — project-owned")
+    print("   • Makefile           (v\(version))")
     print("")
 
     if !installedSkills.isEmpty {
@@ -927,7 +958,7 @@ func main() {
         printBanner()
         let projectType = try detectProjectType()
         try setupSwiftVersion()
-        try setupConfigs()
+        try setupConfigs(force: options.force)
         try setupGitHooks()
         try generateMakefile(for: projectType)
 
