@@ -75,7 +75,7 @@ Non-interactive mode for CI:
 ### 3. Commit
 
 ```bash
-git add .gitmodules ARCDevTools/ .swiftlint.yml .swiftformat Makefile .claude/
+git add .gitmodules ARCDevTools/ .swiftlint.base.yml .swiftlint.yml .swiftformat Makefile .claude/
 git commit -m "chore: integrate ARCDevTools for quality automation"
 ```
 
@@ -87,8 +87,9 @@ After setup, your project looks like this:
 YourProject/
 ├── ARCDevTools/                     ← submodule (this repo)
 │   └── ARCKnowledge/               ← nested submodule (standards + skills)
-├── .swiftlint.yml                  ← copied from configs/
-├── .swiftformat                    ← copied from configs/
+├── .swiftlint.base.yml             ← studio rules (auto-refreshed every run)
+├── .swiftlint.yml                  ← project-owned: `included:` paths + local tweaks
+├── .swiftformat                    ← project-owned (kept on re-run)
 ├── .git/hooks/pre-commit           ← installed from hooks/
 ├── .git/hooks/pre-push             ← installed from hooks/
 ├── Makefile                        ← generated for your project type
@@ -168,15 +169,64 @@ ARCDevTools enforces the code style defined in [ARCKnowledge](https://github.com
 | `no_force_try` | error | Use proper error handling instead of `try!` |
 | `no_empty_line_after_guard` | warning | Clean guard statement formatting |
 
-Full configs: [`configs/swiftlint.yml`](configs/swiftlint.yml) and [`configs/swiftformat`](configs/swiftformat).
+Full configs: [`configs/swiftlint.base.yml`](configs/swiftlint.base.yml), [`configs/swiftlint.starter.yml`](configs/swiftlint.starter.yml), and [`configs/swiftformat`](configs/swiftformat).
 
 ---
 
 ## 🛠️ Customization
 
-The copied configs (`.swiftlint.yml`, `.swiftformat`) are yours to modify. Your customizations are preserved when updating ARCDevTools — the setup script overwrites them, so commit any local overrides before re-running setup.
+ARCDevTools splits SwiftLint config into two files with different owners:
 
-For project-specific SwiftLint additions, edit the copied `.swiftlint.yml` directly.
+| File | Owner | Refresh policy |
+|------|-------|----------------|
+| `.swiftlint.base.yml` | **Studio** | Overwritten on every `arcdevtools-setup` run. Do not edit. |
+| `.swiftlint.yml`      | **Project** | Generated once if absent. Kept on re-run unless `--force`. |
+| `.swiftformat`        | **Project** | Generated once if absent. Kept on re-run unless `--force`. |
+
+`.swiftlint.yml` references the base via `parent_config:` and carries the
+project-specific `included:` paths plus any local rule tweaks. This means
+**studio rule updates flow automatically** when you bump the ARCDevTools
+submodule — without ever rewriting your `included:` paths.
+
+```yaml
+# .swiftlint.yml (project-owned)
+parent_config: .swiftlint.base.yml
+
+included:
+  - MyApp/MyApp
+  - MyApp/MyAppTests
+
+# Optional project-local overrides:
+line_length:
+  warning: 140
+```
+
+### Restoring studio defaults
+
+To reset `.swiftlint.yml` or `.swiftformat` to the shipped template:
+
+```bash
+./ARCDevTools/arcdevtools-setup --force
+```
+
+`--force` overwrites the project-owned files only. `.swiftlint.base.yml`
+refreshes on every run regardless.
+
+### Migrating from a flat `.swiftlint.yml`
+
+If your project predates the split (pre-v1.2.0), the safest path:
+
+1. Note your current `included:` paths.
+2. Delete `.swiftlint.yml` and re-run `./ARCDevTools/arcdevtools-setup` —
+   the new starter is generated.
+3. Edit the new `.swiftlint.yml` and replace the example `included:` with
+   your project's paths.
+4. Move any project-specific rule overrides from the old file into the new
+   `.swiftlint.yml` (below `parent_config:`).
+
+Or convert manually: keep your `.swiftlint.yml`, replace the top with
+`parent_config: .swiftlint.base.yml`, drop the studio rule blocks (they
+live in the base now), and keep your `included:` + local tweaks.
 
 ---
 
@@ -264,7 +314,8 @@ git pull origin main
 cd ..
 git submodule update --recursive
 ./ARCDevTools/arcdevtools-setup
-git add ARCDevTools .swiftlint.yml .swiftformat Makefile
+git add ARCDevTools .swiftlint.base.yml Makefile
+# Note: .swiftlint.yml and .swiftformat are project-owned (only re-stage if you edited them).
 git commit -m "chore(deps): update ARCDevTools to vX.Y.Z"
 ```
 
@@ -276,7 +327,8 @@ git commit -m "chore(deps): update ARCDevTools to vX.Y.Z"
 ARCDevTools/
 ├── arcdevtools-setup              # Setup script (Swift)
 ├── configs/
-│   ├── swiftlint.yml              # SwiftLint configuration
+│   ├── swiftlint.base.yml         # Studio SwiftLint rules (refreshed every run)
+│   ├── swiftlint.starter.yml      # Project-owned starter (parent_config + included:)
 │   └── swiftformat                # SwiftFormat configuration
 ├── hooks/
 │   ├── pre-commit                 # Format + lint on commit
