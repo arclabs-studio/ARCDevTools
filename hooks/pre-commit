@@ -1,6 +1,6 @@
 #!/bin/bash
 # ARCDevTools Pre-commit Hook
-# Version: 1.2.0
+# Version: 1.3.0
 
 set -e
 
@@ -54,8 +54,12 @@ if [ -n "$SWIFTFORMAT_BIN" ]; then
   arc_tool_warn swiftformat
   echo "$STAGED_SWIFT" | xargs "$SWIFTFORMAT_BIN" --config .swiftformat 2>&1 | grep -v "running" || true
 
-  # Re-stage archivos formateados
-  echo "$STAGED_SWIFT" | xargs git add
+  # Re-stage archivos formateados.
+  # -f porque algunos repos ignoran rutas que sí tienen ficheros trackeados
+  # (p. ej. .claude/skills/ con arc-package-validator dentro). Sin -f, `git add`
+  # aborta con "paths are ignored", y con `set -e` eso bloquea el commit entero.
+  # Es seguro: estos ficheros ya estaban en stage, luego ya están trackeados.
+  echo "$STAGED_SWIFT" | xargs git add -f
   echo "  Formato aplicado"
 else
   arc_tool_warn swiftformat
