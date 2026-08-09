@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.14.1] - 2026-08-10
+
+### Fixed
+- **Skills and agents added after the first setup run were never gitignored.** `updateGitignoreWithSkills` / `updateGitignoreWithAgents` returned early once their section header existed, so the list was written once and never extended. Consumer projects accumulated untracked symlinks on every ARCKnowledge update (four in ARCPurchasing on the v2.14.0 bump). Both now append only the missing entries, inserted under the existing header.
+
+---
+
 ## [2.14.0] - 2026-08-10
 
 ### Added
