@@ -30,3 +30,6 @@ logs/
 # Archivos de configuración local
 .claude-code/
 *.local
+
+# ARCDevTools pinned tool binaries
+.arc-tools/
