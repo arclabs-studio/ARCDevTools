@@ -723,8 +723,14 @@ func setupClaudeSkills() throws -> [String] {
                 continue
             }
 
-            // Skip if already exists (don't overwrite ARCDevTools skills)
+            // Skip if already exists (don't overwrite ARCDevTools skills).
+            // A pre-existing *symlink* is one we created on an earlier run, so
+            // it still belongs in .gitignore — otherwise projects set up before
+            // a given skill was gitignored never get the entry.
             if fileManager.fileExists(atPath: destSkill.path) {
+                if (try? destSkill.resourceValues(forKeys: [.isSymbolicLinkKey]))?.isSymbolicLink == true {
+                    symlinkedSkills.append(skillName)
+                }
                 continue
             }
 
@@ -855,9 +861,16 @@ func setupClaudeAgents() throws -> [String] {
     for filename in agentFiles where filename.hasSuffix(".md") && filename.hasPrefix("arc-") {
         let destFile = agentsDir.appendingPathComponent(filename)
 
-        // Skip if already exists (project-local agent takes priority)
+        // Skip if already exists (project-local agent takes priority).
+        // A pre-existing symlink came from an earlier run of this script, so it
+        // still needs its .gitignore entry — see the equivalent case in
+        // setupClaudeSkills().
         if fileManager.fileExists(atPath: destFile.path) {
-            printWarning("   \(filename) already exists — skipping")
+            if (try? destFile.resourceValues(forKeys: [.isSymbolicLinkKey]))?.isSymbolicLink == true {
+                symlinkedAgents.append(filename)
+            } else {
+                printWarning("   \(filename) already exists — skipping")
+            }
             continue
         }
 
