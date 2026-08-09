@@ -1,5 +1,5 @@
 # ARCDevTools SwiftFormat Configuration
-# Version: 1.0.0
+# Version: 1.1.0
 
 # Indentation
 --indent 4
@@ -52,4 +52,8 @@
 --extensionacl on-extension
 
 # Exclude
---exclude .build,DerivedData,Pods,Carthage,Generated
+# ARCDevTools / Tools/ARCDevTools are the submodule itself — `make fix` runs
+# swiftformat over `.`, so without these it reformats the tooling repo's own
+# sources and leaves the submodule dirty. .arc-tools holds downloaded binaries.
+# Mirrors the `excluded:` list in swiftlint.base.yml.
+--exclude .build,DerivedData,Pods,Carthage,Generated,ARCDevTools,Tools/ARCDevTools,.arc-tools
