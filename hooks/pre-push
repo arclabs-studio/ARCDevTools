@@ -23,9 +23,12 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT" || exit 1
 
 # Resolve the *pinned* SwiftLint/SwiftFormat so local results match CI.
-if [ -f "$REPO_ROOT/ARCDevTools/scripts/tool-env.sh" ]; then
+# The submodule is usually at ARCDevTools/, but projects may nest it
+# (e.g. Tools/ARCDevTools), so locate it rather than hardcoding the path.
+ARC_TOOL_ENV="$(find "$REPO_ROOT" -maxdepth 3 -path '*/ARCDevTools/scripts/tool-env.sh' -print -quit 2>/dev/null)"
+if [ -n "$ARC_TOOL_ENV" ]; then
     # shellcheck source=/dev/null
-    . "$REPO_ROOT/ARCDevTools/scripts/tool-env.sh"
+    . "$ARC_TOOL_ENV"
 else
     SWIFTLINT_BIN="$(command -v swiftlint || true)"
     SWIFTFORMAT_BIN="$(command -v swiftformat || true)"
