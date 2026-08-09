@@ -778,6 +778,20 @@ func updateGitignoreWithTools() throws {
 }
 
 func updateGitignoreWithSkills(_ skills: [String]) throws {
+    try appendMissingGitignoreEntries(
+        header: "# ARCKnowledge skills (symlinks)",
+        entries: skills.sorted().map { ".claude/skills/\($0)" },
+        label: "skills"
+    )
+}
+
+/// Appends only the entries `.gitignore` does not already list.
+///
+/// The section header is written once. Earlier versions bailed out as soon as
+/// the header existed, so skills and agents added to ARCKnowledge after the
+/// first setup run were never ignored and showed up as untracked symlinks in
+/// every consumer project.
+func appendMissingGitignoreEntries(header: String, entries: [String], label: String) throws {
     let gitignorePath = projectRoot.appendingPathComponent(".gitignore")
 
     var gitignoreContent = ""
@@ -785,24 +799,28 @@ func updateGitignoreWithSkills(_ skills: [String]) throws {
         gitignoreContent = try String(contentsOf: gitignorePath, encoding: .utf8)
     }
 
-    // Check if skills section already exists
-    let skillsHeader = "# ARCKnowledge skills (symlinks)"
-    if gitignoreContent.contains(skillsHeader) {
-        // Already configured, skip
-        return
+    var lines = gitignoreContent.components(separatedBy: "\n")
+    let existing = Set(lines.map { $0.trimmingCharacters(in: .whitespaces) })
+    let missing = entries.filter { !existing.contains($0) }
+
+    guard !missing.isEmpty else { return }
+
+    if let headerIndex = lines.firstIndex(of: header) {
+        // Insert at the end of the block already under this header, so related
+        // entries stay grouped instead of drifting to the bottom of the file.
+        var insertAt = headerIndex + 1
+        while insertAt < lines.count, !lines[insertAt].trimmingCharacters(in: .whitespaces).isEmpty {
+            insertAt += 1
+        }
+        lines.insert(contentsOf: missing, at: insertAt)
+    } else {
+        while lines.last?.isEmpty == true { lines.removeLast() }
+        lines.append(contentsOf: ["", "", header] + missing)
     }
 
-    // Build skills section
-    var skillsSection = "\n\n\(skillsHeader)\n"
-    for skill in skills.sorted() {
-        skillsSection += ".claude/skills/\(skill)\n"
-    }
-
-    // Append to .gitignore
-    gitignoreContent += skillsSection
-
-    try gitignoreContent.write(to: gitignorePath, atomically: true, encoding: .utf8)
-    printSuccess("   .gitignore updated with symlinked skills")
+    let updated = lines.joined(separator: "\n").appending(lines.last?.isEmpty == true ? "" : "\n")
+    try updated.write(to: gitignorePath, atomically: true, encoding: .utf8)
+    printSuccess("   .gitignore updated with \(missing.count) symlinked \(label)")
 }
 
 func calculateRelativePath(from source: URL, to target: URL) -> String {
@@ -865,26 +883,11 @@ func setupClaudeAgents() throws -> [String] {
 }
 
 func updateGitignoreWithAgents(_ agents: [String]) throws {
-    let gitignorePath = projectRoot.appendingPathComponent(".gitignore")
-
-    var gitignoreContent = ""
-    if fileManager.fileExists(atPath: gitignorePath.path) {
-        gitignoreContent = try String(contentsOf: gitignorePath, encoding: .utf8)
-    }
-
-    let agentsHeader = "# ARCKnowledge agents (symlinks)"
-    if gitignoreContent.contains(agentsHeader) {
-        return
-    }
-
-    var agentsSection = "\n\n\(agentsHeader)\n"
-    for agent in agents.sorted() {
-        agentsSection += ".claude/agents/\(agent)\n"
-    }
-
-    gitignoreContent += agentsSection
-    try gitignoreContent.write(to: gitignorePath, atomically: true, encoding: .utf8)
-    printSuccess("   .gitignore updated with symlinked agents")
+    try appendMissingGitignoreEntries(
+        header: "# ARCKnowledge agents (symlinks)",
+        entries: agents.sorted().map { ".claude/agents/\($0)" },
+        label: "agents"
+    )
 }
 
 func askUserForWorkflows() -> Bool {
