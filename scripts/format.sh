@@ -1,6 +1,9 @@
 #!/bin/bash
 # ARCDevTools - SwiftFormat Runner
-# Version: 1.0.0
+# Version: 2.0.0
+#
+# Runs the *pinned* SwiftFormat (see configs/tool-versions) so local results
+# match CI exactly.
 
 set -e
 
@@ -21,13 +24,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./tool-env.sh
+. "$SCRIPT_DIR/tool-env.sh"
+
 echo "🎨 Ejecutando SwiftFormat..."
 
-if ! command -v swiftformat >/dev/null 2>&1; then
+if [ -z "$SWIFTFORMAT_BIN" ]; then
   echo "❌ Error: SwiftFormat no está instalado"
-  echo "   Instala con: brew install swiftformat"
+  arc_tool_warn swiftformat
   exit 1
 fi
+
+arc_tool_warn swiftformat
 
 if [ ! -f "$CONFIG_FILE" ]; then
   echo "⚠️  Advertencia: No se encontró $CONFIG_FILE"
@@ -39,10 +48,12 @@ fi
 
 if [ "$DRY_RUN" = true ]; then
   echo "   Modo: dry-run (sin cambios)"
-  swiftformat $CONFIG_ARG --lint .
+  # shellcheck disable=SC2086
+  "$SWIFTFORMAT_BIN" $CONFIG_ARG --lint .
 else
   echo "   Modo: aplicar cambios"
-  swiftformat $CONFIG_ARG .
+  # shellcheck disable=SC2086
+  "$SWIFTFORMAT_BIN" $CONFIG_ARG .
 fi
 
 echo "✅ SwiftFormat completado"

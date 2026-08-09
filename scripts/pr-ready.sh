@@ -1,46 +1,58 @@
 #!/bin/bash
 # ARCDevTools PR Ready Check
 # Ejecuta todas las verificaciones del CI localmente
-# Version: 1.0.0
+# Version: 2.0.0
+#
+# Usa las versiones *fijadas* de SwiftLint/SwiftFormat (configs/tool-versions)
+# para que el resultado local coincida con el del CI.
 
 set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./tool-env.sh
+. "$SCRIPT_DIR/tool-env.sh"
 
 echo ""
 echo "========================================================"
 echo "  PR Ready Check - Verificando que el PR esta listo"
 echo "========================================================"
 echo ""
+echo "  SwiftLint   ${SWIFTLINT_VERSION:-?} (${SWIFTLINT_STATUS})"
+echo "  SwiftFormat ${SWIFTFORMAT_VERSION:-?} (${SWIFTFORMAT_STATUS})"
+echo ""
 
 FAILED=0
 
 # 1. SwiftFormat
 echo "[1/4] SwiftFormat..."
-if command -v swiftformat >/dev/null 2>&1; then
-  if swiftformat --lint Sources/ Tests/ 2>/dev/null; then
+if [ -n "$SWIFTFORMAT_BIN" ]; then
+  arc_tool_warn swiftformat
+  if "$SWIFTFORMAT_BIN" --lint Sources/ Tests/ 2>/dev/null; then
     echo "      SwiftFormat OK"
   else
     echo "      SwiftFormat FALLO"
-    echo "      Ejecuta: swiftformat Sources/ Tests/"
+    echo "      Ejecuta: make fix"
     FAILED=1
   fi
 else
-  echo "      SwiftFormat no instalado (brew install swiftformat)"
+  arc_tool_warn swiftformat
   FAILED=1
 fi
 echo ""
 
 # 2. SwiftLint
 echo "[2/4] SwiftLint..."
-if command -v swiftlint >/dev/null 2>&1; then
-  if swiftlint lint --strict --quiet 2>/dev/null; then
+if [ -n "$SWIFTLINT_BIN" ]; then
+  arc_tool_warn swiftlint
+  if "$SWIFTLINT_BIN" lint --strict --quiet 2>/dev/null; then
     echo "      SwiftLint OK"
   else
     echo "      SwiftLint FALLO"
-    echo "      Ejecuta: swiftlint lint para ver detalles"
+    echo "      Ejecuta: make lint para ver detalles"
     FAILED=1
   fi
 else
-  echo "      SwiftLint no instalado (brew install swiftlint)"
+  arc_tool_warn swiftlint
   FAILED=1
 fi
 echo ""

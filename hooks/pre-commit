@@ -1,8 +1,22 @@
 #!/bin/bash
 # ARCDevTools Pre-commit Hook
-# Version: 1.1.0
+# Version: 1.2.0
 
 set -e
+
+# Resolve the *pinned* SwiftLint/SwiftFormat so local results match CI.
+# The submodule is usually at ARCDevTools/, but projects may nest it
+# (e.g. Tools/ARCDevTools), so locate it rather than hardcoding the path.
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+ARC_TOOL_ENV="$(find "$REPO_ROOT" -maxdepth 3 -path '*/ARCDevTools/scripts/tool-env.sh' -print -quit 2>/dev/null)"
+if [ -n "$ARC_TOOL_ENV" ]; then
+  # shellcheck source=/dev/null
+  . "$ARC_TOOL_ENV"
+else
+  SWIFTLINT_BIN="$(command -v swiftlint || true)"
+  SWIFTFORMAT_BIN="$(command -v swiftformat || true)"
+  arc_tool_warn() { :; }
+fi
 
 # Detectar si se está intentando saltar verificaciones
 if [ "$SKIP_HOOKS" = "1" ]; then
@@ -34,22 +48,24 @@ echo "  Archivos a verificar:"
 echo "$STAGED_SWIFT" | sed 's/^/    - /'
 
 # 1. SwiftFormat (auto-fix)
-if command -v swiftformat >/dev/null 2>&1; then
+if [ -n "$SWIFTFORMAT_BIN" ]; then
   echo ""
   echo "  Aplicando SwiftFormat..."
-  echo "$STAGED_SWIFT" | xargs swiftformat --config .swiftformat 2>&1 | grep -v "running" || true
+  arc_tool_warn swiftformat
+  echo "$STAGED_SWIFT" | xargs "$SWIFTFORMAT_BIN" --config .swiftformat 2>&1 | grep -v "running" || true
 
   # Re-stage archivos formateados
   echo "$STAGED_SWIFT" | xargs git add
   echo "  Formato aplicado"
 else
-  echo "  SwiftFormat no instalado (brew install swiftformat)"
+  arc_tool_warn swiftformat
 fi
 
 # 2. SwiftLint (strict mode)
-if command -v swiftlint >/dev/null 2>&1; then
+if [ -n "$SWIFTLINT_BIN" ]; then
   echo ""
   echo "  Ejecutando SwiftLint..."
+  arc_tool_warn swiftlint
 
   # Filter staged files to only those in included paths from .swiftlint.yml
   LINT_FILES=""
@@ -73,7 +89,7 @@ if command -v swiftlint >/dev/null 2>&1; then
 
   if [ -z "$LINT_FILES" ]; then
     echo "  No hay archivos Swift en paths incluidos, omitiendo lint..."
-  elif echo "$LINT_FILES" | xargs swiftlint lint --config .swiftlint.yml --strict --quiet; then
+  elif echo "$LINT_FILES" | xargs "$SWIFTLINT_BIN" lint --config .swiftlint.yml --strict --quiet; then
     echo "  SwiftLint passed"
   else
     echo ""
@@ -91,7 +107,7 @@ if command -v swiftlint >/dev/null 2>&1; then
     exit 1
   fi
 else
-  echo "  SwiftLint no instalado (brew install swiftlint)"
+  arc_tool_warn swiftlint
 fi
 
 echo ""

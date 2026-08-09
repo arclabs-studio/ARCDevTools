@@ -42,7 +42,8 @@ The setup script detects your project type automatically.
 - **Swift** 6.0+
 - **Xcode** 16.0+ (for iOS apps)
 - **Git** 2.30+
-- **SwiftLint** and **SwiftFormat** (`brew install swiftlint swiftformat`)
+- **SwiftLint** and **SwiftFormat** — installed by `make tools`, not Homebrew
+  (see [Pinned tool versions](#-pinned-tool-versions))
 
 ---
 
@@ -87,6 +88,8 @@ After setup, your project looks like this:
 YourProject/
 ├── ARCDevTools/                     ← submodule (this repo)
 │   └── ARCKnowledge/               ← nested submodule (standards + skills)
+├── .arc-tool-versions              ← pinned SwiftLint/SwiftFormat versions (auto-refreshed)
+├── .arc-tools/bin/                 ← pinned linter binaries (gitignored, `make tools`)
 ├── .swiftlint.base.yml             ← studio rules (auto-refreshed every run)
 ├── .swiftlint.yml                  ← project-owned: `included:` paths + local tweaks
 ├── .swiftformat                    ← project-owned (kept on re-run)
@@ -105,6 +108,7 @@ YourProject/
 
 ```bash
 make help      # Show all available commands
+make tools     # Install the pinned SwiftLint/SwiftFormat into .arc-tools/
 make lint      # Run SwiftLint
 make format    # Check formatting (dry-run)
 make fix       # Apply SwiftFormat auto-fixes
@@ -131,6 +135,49 @@ Quality checks run automatically:
 
 - **Pre-commit** — Runs SwiftFormat (auto-fix) and SwiftLint (strict) on staged `.swift` files. Blocks the commit if linting fails.
 - **Pre-push** — Runs all tests. Blocks the push if tests fail.
+
+Both hooks use the pinned linters and warn loudly if your local version differs
+from the pin.
+
+---
+
+## 📌 Pinned Tool Versions
+
+SwiftLint and SwiftFormat are pinned to exact versions in
+[`configs/tool-versions`](configs/tool-versions), copied into every project as
+`.arc-tool-versions` (studio-owned, refreshed on every setup run).
+
+```bash
+make tools     # installs the pinned versions into .arc-tools/bin (gitignored)
+```
+
+Everything resolves that pin through
+[`scripts/tool-env.sh`](scripts/tool-env.sh): git hooks, `make lint`,
+`make format`, GitHub Actions, and Xcode Cloud. Local results therefore match
+CI exactly.
+
+### Why not Homebrew?
+
+Homebrew has no versioned formula for either tool, so `brew install swiftlint`
+resolves to whatever is latest that day. That produced the failure mode this
+replaced: developer machines sat on an old SwiftLint, SPM CI installed the
+newest via brew, and iOS CI used `norio-nomura/action-swiftlint` — whose
+version tag pins the *action*, not the linter behind it (a moving Docker tag).
+Three different linters, one `--strict` gate. PRs that were green locally
+failed in CI, most often with `superfluous_disable_command` errors: a
+`// swiftlint:disable` comment an older version required, that a newer version
+flags as unnecessary.
+
+`.arc-tools/` holds machine-specific binaries and is gitignored. The pin itself
+is committed, so the version is reviewed like any other change.
+
+### Bumping a version
+
+1. Edit `SWIFTLINT_VERSION` / `SWIFTFORMAT_VERSION` in `configs/tool-versions`.
+2. Run `./ARCDevTools/scripts/install-tools.sh` and `make lint format`.
+3. Fix any new violations, commit, tag a release.
+4. Consumers pick it up on their next submodule update + `arcdevtools-setup`,
+   then run `make tools`.
 
 ---
 

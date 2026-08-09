@@ -58,9 +58,56 @@ Configures standard GitHub labels for ARCDevTools repository.
 
 ## Development Scripts
 
+### `install-tools.sh`
+
+Installs the exact SwiftLint and SwiftFormat versions pinned in
+[`configs/tool-versions`](../configs/tool-versions) (or the consumer project's
+`.arc-tool-versions`) into `<repo>/.arc-tools/bin`.
+
+Downloads the official release binaries directly — **never** Homebrew, which
+has no versioned formula and silently drifts to latest. That drift is what made
+`--strict` CI fail on PRs that were green locally.
+
+Supports macOS (universal binary) and Linux x86_64/arm64 (uses the statically
+linked SwiftLint build, so bare CI images need no Swift toolchain). Idempotent:
+a tool already at the pinned version is left alone.
+
+**Usage:**
+```bash
+./scripts/install-tools.sh              # both tools
+./scripts/install-tools.sh swiftlint    # one tool
+./scripts/install-tools.sh --force      # reinstall
+```
+
+In consumer projects: `make tools`.
+
+---
+
+### `tool-env.sh`
+
+**Sourced, not executed.** Resolves the pinned SwiftLint/SwiftFormat binaries
+for git hooks, `lint.sh`, `format.sh` and `pr-ready.sh`.
+
+Resolution order: `.arc-tools/bin/<tool>` at the pinned version → `<tool>` on
+PATH at the pinned version → `<tool>` on PATH at any version (reported as
+drift) → missing.
+
+**Exports:** `SWIFTLINT_BIN`, `SWIFTFORMAT_BIN`, `SWIFTLINT_VERSION`,
+`SWIFTFORMAT_VERSION`, `SWIFTLINT_STATUS`, `SWIFTFORMAT_STATUS`, plus the
+`arc_tool_warn <tool>` helper that prints a drift/missing warning with the fix.
+
+**Usage:**
+```bash
+source ARCDevTools/scripts/tool-env.sh
+arc_tool_warn swiftlint
+"$SWIFTLINT_BIN" lint --strict
+```
+
+---
+
 ### `format.sh`
 
-Runs SwiftFormat to check code formatting.
+Runs the pinned SwiftFormat to check code formatting.
 
 **Usage:**
 ```bash
@@ -71,7 +118,7 @@ Runs SwiftFormat to check code formatting.
 
 ### `lint.sh`
 
-Runs SwiftLint to check code style and quality.
+Runs the pinned SwiftLint to check code style and quality.
 
 **Usage:**
 ```bash

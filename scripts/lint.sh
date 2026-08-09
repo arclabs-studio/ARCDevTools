@@ -1,25 +1,34 @@
 #!/bin/bash
 # ARCDevTools - SwiftLint Runner
-# Version: 1.0.0
+# Version: 2.0.0
+#
+# Runs the *pinned* SwiftLint (see configs/tool-versions) so local results
+# match CI exactly.
 
 set -e
 
 CONFIG_FILE=".swiftlint.yml"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./tool-env.sh
+. "$SCRIPT_DIR/tool-env.sh"
+
 echo "🔍 Ejecutando SwiftLint..."
 
-if ! command -v swiftlint >/dev/null 2>&1; then
+if [ -z "$SWIFTLINT_BIN" ]; then
   echo "❌ Error: SwiftLint no está instalado"
-  echo "   Instala con: brew install swiftlint"
+  arc_tool_warn swiftlint
   exit 1
 fi
+
+arc_tool_warn swiftlint
 
 if [ ! -f "$CONFIG_FILE" ]; then
   echo "⚠️  Advertencia: No se encontró $CONFIG_FILE"
   echo "   Ejecutando con configuración por defecto..."
-  swiftlint lint
+  "$SWIFTLINT_BIN" lint
 else
-  swiftlint lint --config "$CONFIG_FILE"
+  "$SWIFTLINT_BIN" lint --config "$CONFIG_FILE"
 fi
 
 echo "✅ SwiftLint completado"

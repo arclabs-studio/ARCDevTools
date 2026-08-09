@@ -67,12 +67,21 @@ jobs:
   swiftlint:
     runs-on: ubuntu-latest  # 1x multiplier
     steps:
-      - uses: norio-nomura/action-swiftlint@3.2.1
+      - uses: actions/cache@v4
         with:
-          args: --strict
+          path: .arc-tools
+          key: arc-tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.arc-tool-versions') }}
+      - run: ./ARCDevTools/scripts/install-tools.sh swiftlint
+      - run: .arc-tools/bin/swiftlint lint --strict
 ```
 
 **Savings:** ~5 minutes Linux vs 50 minutes macOS equivalent per PR.
+
+> **Never** use `norio-nomura/action-swiftlint` or `brew install swiftlint`.
+> Both drift: the action's tag pins the action, not the linter behind it (a
+> moving Docker tag), and brew has no versioned formula. Version drift between
+> dev machines and CI is what made `--strict` PRs fail unpredictably. See
+> [Pinned Tool Versions](../README.md#-pinned-tool-versions).
 
 ### 2. Combined Build & Test Job
 

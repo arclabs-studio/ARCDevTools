@@ -22,14 +22,28 @@ echo "🚀 Pre-push: Running quality checks..."
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT" || exit 1
 
+# Resolve the *pinned* SwiftLint/SwiftFormat so local results match CI.
+# The submodule is usually at ARCDevTools/, but projects may nest it
+# (e.g. Tools/ARCDevTools), so locate it rather than hardcoding the path.
+ARC_TOOL_ENV="$(find "$REPO_ROOT" -maxdepth 3 -path '*/ARCDevTools/scripts/tool-env.sh' -print -quit 2>/dev/null)"
+if [ -n "$ARC_TOOL_ENV" ]; then
+    # shellcheck source=/dev/null
+    . "$ARC_TOOL_ENV"
+else
+    SWIFTLINT_BIN="$(command -v swiftlint || true)"
+    SWIFTFORMAT_BIN="$(command -v swiftformat || true)"
+    arc_tool_warn() { :; }
+fi
+
 FAILED=0
 
 # 1. SwiftFormat (lint mode — no auto-fix)
-if command -v swiftformat >/dev/null 2>&1; then
+if [ -n "$SWIFTFORMAT_BIN" ]; then
     echo ""
     echo "  Checking formatting (SwiftFormat)..."
+    arc_tool_warn swiftformat
     if [ -f ".swiftformat" ]; then
-        if swiftformat --lint --config .swiftformat . >/dev/null 2>&1; then
+        if "$SWIFTFORMAT_BIN" --lint --config .swiftformat . >/dev/null 2>&1; then
             echo "  ✅ SwiftFormat passed"
         else
             echo "  ❌ SwiftFormat found unformatted files"
@@ -39,15 +53,16 @@ if command -v swiftformat >/dev/null 2>&1; then
         echo "  No .swiftformat config found, skipping..."
     fi
 else
-    echo "  SwiftFormat not installed (brew install swiftformat), skipping..."
+    arc_tool_warn swiftformat
 fi
 
 # 2. SwiftLint (strict mode)
-if command -v swiftlint >/dev/null 2>&1; then
+if [ -n "$SWIFTLINT_BIN" ]; then
     echo ""
     echo "  Running SwiftLint..."
+    arc_tool_warn swiftlint
     if [ -f ".swiftlint.yml" ]; then
-        if swiftlint lint --config .swiftlint.yml --strict --quiet; then
+        if "$SWIFTLINT_BIN" lint --config .swiftlint.yml --strict --quiet; then
             echo "  ✅ SwiftLint passed"
         else
             FAILED=1
@@ -56,7 +71,7 @@ if command -v swiftlint >/dev/null 2>&1; then
         echo "  No .swiftlint.yml config found, skipping..."
     fi
 else
-    echo "  SwiftLint not installed (brew install swiftlint), skipping..."
+    arc_tool_warn swiftlint
 fi
 
 if [ "$FAILED" -ne 0 ]; then
