@@ -18,17 +18,7 @@ Before you begin, ensure you have:
 
 ## Installation Steps
 
-### Step 1: Install Required Tools
-
-First, install SwiftLint and SwiftFormat using Homebrew:
-
-```bash
-brew install swiftlint swiftformat
-```
-
-These tools are required for ARCDevTools to function properly.
-
-### Step 2: Add ARCDevTools as Submodule
+### Step 1: Add ARCDevTools as Submodule
 
 Navigate to your project root and add ARCDevTools as a Git submodule:
 
@@ -50,7 +40,7 @@ git clone --recurse-submodules https://github.com/your-org/your-project
 git submodule update --init --recursive
 ```
 
-### Step 3: Run Setup
+### Step 2: Run Setup
 
 Navigate to your project root directory and run the setup script:
 
@@ -61,11 +51,25 @@ cd /path/to/your/project
 
 The setup tool will:
 
-1. ✅ Copy `.swiftlint.yml` configuration to your project
-2. ✅ Copy `.swiftformat` configuration to your project
-3. ✅ Install pre-commit and pre-push git hooks (if `.git/` exists)
-4. ✅ Generate a `Makefile` with useful commands
-5. ✅ Optionally copy GitHub Actions workflows (you'll be asked)
+1. ✅ Copy `.arc-tool-versions` (pinned SwiftLint/SwiftFormat versions)
+2. ✅ Copy `.swiftlint.yml` configuration to your project
+3. ✅ Copy `.swiftformat` configuration to your project
+4. ✅ Install pre-commit and pre-push git hooks (if `.git/` exists)
+5. ✅ Generate a `Makefile` with useful commands
+6. ✅ Optionally copy GitHub Actions workflows (you'll be asked)
+
+### Step 3: Install the Pinned Linters
+
+```bash
+make tools
+```
+
+This downloads the exact SwiftLint and SwiftFormat versions pinned in
+`.arc-tool-versions` into `.arc-tools/bin` (gitignored). Do **not**
+`brew install swiftlint` — brew has no versioned formula, so it drifts to
+whatever is latest and your local results stop matching CI. Re-run
+`make tools` whenever the pin changes; the git hooks warn you if your version
+differs.
 
 ## Verify Installation
 
