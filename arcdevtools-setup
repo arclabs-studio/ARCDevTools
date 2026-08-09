@@ -132,6 +132,20 @@ let scriptURL = URL(fileURLWithPath: CommandLine.arguments[0])
 let scriptDir = scriptURL.deletingLastPathComponent()
 let projectRoot = URL(fileURLWithPath: fileManager.currentDirectoryPath)
 
+/// Where the ARCDevTools submodule lives, relative to the project root.
+///
+/// Usually `ARCDevTools`, but projects are free to nest it (FavRes-iOS uses
+/// `Tools/ARCDevTools`). Generated Makefiles and copied workflows must use the
+/// real path, not a hardcoded one, or `make lint` and CI break in those repos.
+let arcDevToolsPath: String = {
+    let root = projectRoot.standardizedFileURL.path
+    let tools = scriptDir.standardizedFileURL.path
+    if tools.hasPrefix(root + "/") {
+        return String(tools.dropFirst(root.count + 1))
+    }
+    return scriptDir.lastPathComponent
+}()
+
 // MARK: - Setup Functions
 
 func printBanner() {
@@ -414,16 +428,16 @@ help:
 # and SwiftFormat versions pinned in .arc-tool-versions — the same versions CI
 # installs. Run `make tools` once (and after any pin bump) to install them.
 tools:
-\t@./ARCDevTools/scripts/install-tools.sh
+\t@./\(arcDevToolsPath)/scripts/install-tools.sh
 
 lint:
-\t@./ARCDevTools/scripts/lint.sh
+\t@./\(arcDevToolsPath)/scripts/lint.sh
 
 format:
-\t@./ARCDevTools/scripts/format.sh --dry-run
+\t@./\(arcDevToolsPath)/scripts/format.sh --dry-run
 
 fix:
-\t@./ARCDevTools/scripts/format.sh
+\t@./\(arcDevToolsPath)/scripts/format.sh
 
 build:
 \t@swift build
@@ -432,10 +446,10 @@ test:
 \t@swift test --parallel
 
 setup:
-\t@./ARCDevTools/arcdevtools-setup
+\t@./\(arcDevToolsPath)/arcdevtools-setup
 
 hooks:
-\t@./ARCDevTools/hooks/install-hooks.sh
+\t@./\(arcDevToolsPath)/hooks/install-hooks.sh
 
 clean:
 \t@rm -rf .build DerivedData
@@ -479,16 +493,16 @@ help:
 # and SwiftFormat versions pinned in .arc-tool-versions — the same versions CI
 # installs. Run `make tools` once (and after any pin bump) to install them.
 tools:
-\t@./ARCDevTools/scripts/install-tools.sh
+\t@./\(arcDevToolsPath)/scripts/install-tools.sh
 
 lint:
-\t@./ARCDevTools/scripts/lint.sh
+\t@./\(arcDevToolsPath)/scripts/lint.sh
 
 format:
-\t@./ARCDevTools/scripts/format.sh --dry-run
+\t@./\(arcDevToolsPath)/scripts/format.sh --dry-run
 
 fix:
-\t@./ARCDevTools/scripts/format.sh
+\t@./\(arcDevToolsPath)/scripts/format.sh
 
 build:
 \t@if [ -z "$(SCHEME)" ]; then \\
@@ -517,10 +531,10 @@ test:
 \t\tCODE_SIGNING_ALLOWED=NO
 
 setup:
-\t@./ARCDevTools/arcdevtools-setup
+\t@./\(arcDevToolsPath)/arcdevtools-setup
 
 hooks:
-\t@./ARCDevTools/hooks/install-hooks.sh
+\t@./\(arcDevToolsPath)/hooks/install-hooks.sh
 
 clean:
 \t@rm -rf DerivedData
@@ -534,6 +548,13 @@ clean:
     try makefileContent.write(to: makefileDest, atomically: true, encoding: .utf8)
 
     printSuccess("   Makefile generated (\(projectType.displayName))")
+}
+
+/// Rewrites the `ARCDevTools/` prefix in a copied template to the submodule's
+/// real location. No-op for the common case where it already matches.
+func rewriteToolsPath(in content: String) -> String {
+    guard arcDevToolsPath != "ARCDevTools" else { return content }
+    return content.replacingOccurrences(of: "ARCDevTools/", with: "\(arcDevToolsPath)/")
 }
 
 func setupWorkflows(for projectType: ProjectType) throws {
@@ -576,10 +597,10 @@ func setupWorkflows(for projectType: ProjectType) throws {
         # Source: https://github.com/arclabs-studio/ARCDevTools/\(workflowsDirName)/\(filename)
         #
         # This file was copied from ARCDevTools. You can customize it for your project.
-        # To update: re-run ./ARCDevTools/arcdevtools-setup or manually copy from ARCDevTools/\(workflowsDirName)/
+        # To update: re-run ./\(arcDevToolsPath)/arcdevtools-setup or manually copy from \(arcDevToolsPath)/\(workflowsDirName)/
 
         """
-        let newContent = templateComment + originalContent
+        let newContent = templateComment + rewriteToolsPath(in: originalContent)
 
         try? fileManager.removeItem(at: destFile)
         try newContent.write(to: destFile, atomically: true, encoding: .utf8)
@@ -605,10 +626,10 @@ func setupWorkflows(for projectType: ProjectType) throws {
             # Source: https://github.com/arclabs-studio/ARCDevTools/workflows-spm/\(filename)
             #
             # This file was copied from ARCDevTools. You can customize it for your project.
-            # To update: re-run ./ARCDevTools/arcdevtools-setup or manually copy from ARCDevTools/workflows-spm/
+            # To update: re-run ./\(arcDevToolsPath)/arcdevtools-setup or manually copy from \(arcDevToolsPath)/workflows-spm/
 
             """
-            let newContent = templateComment + originalContent
+            let newContent = templateComment + rewriteToolsPath(in: originalContent)
 
             try? fileManager.removeItem(at: destFile)
             try newContent.write(to: destFile, atomically: true, encoding: .utf8)
@@ -908,8 +929,10 @@ func setupCIScripts() throws {
         let sourceFile = sourceDir.appendingPathComponent(filename)
         let destFile = destDir.appendingPathComponent(filename)
 
+        let content = rewriteToolsPath(in: try String(contentsOf: sourceFile, encoding: .utf8))
+
         try? fileManager.removeItem(at: destFile)
-        try fileManager.copyItem(at: sourceFile, to: destFile)
+        try content.write(to: destFile, atomically: true, encoding: .utf8)
         try makeExecutable(destFile)
         printSuccess("   ci_scripts/\(filename)")
     }
