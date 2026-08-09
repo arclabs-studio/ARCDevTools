@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [2.14.0] - 2026-08-10
+
 ### Added
 - **`configs/tool-versions`** — single source of truth pinning SwiftLint (`0.65.0`) and SwiftFormat (`0.62.1`). Copied into every project as `.arc-tool-versions` (studio-owned, refreshed on every setup run).
 - **`scripts/install-tools.sh`** — installs the pinned linters from official release binaries into `<repo>/.arc-tools/bin` (gitignored). macOS universal + Linux x86_64/arm64 (statically linked SwiftLint, so no Swift toolchain needed on bare CI images). Idempotent.
@@ -22,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **SwiftLint version drift broke PR CI.** Three different linter versions were in play at once: dev machines (whatever brew installed months ago, e.g. `0.49.1`), SPM CI (`brew install swiftlint` = always latest, `0.65.0`), and iOS CI (`norio-nomura/action-swiftlint@3.2.1`, whose tag pins the *action* while the image behind it — `norionomura/swiftlint:swift-5` — is a moving tag). Under `swiftlint lint --strict` this produced PRs that were green locally and red in CI, most visibly `superfluous_disable_command` errors where a newer SwiftLint no longer needs a `// swiftlint:disable` an older one required (observed in ARCPurchasing PR #15). All install paths now resolve the pinned version from `.arc-tool-versions`.
+- **Hardcoded `ARCDevTools/` submodule path.** Generated Makefiles, copied workflows and `ci_scripts` assumed the submodule sits at `ARCDevTools/`; FavRes-iOS nests it at `Tools/ARCDevTools`, where the new `make tools` target and the pinned-linter CI steps would have pointed at a nonexistent path. `arcdevtools-setup` now resolves the real location and rewrites it in everything it generates. Git hooks locate `tool-env.sh` with a depth-limited search instead of hardcoding it — previously they fell back to unpinned PATH binaries in those projects, reintroducing the drift. Also fixes the pre-existing `make setup` / `make hooks` targets, which had the same assumption.
 
 ### Changed
 - **`workflows-spm/quality.yml`** — replaced `brew install swiftlint` / `brew install swiftformat` with the pinned installer plus an `actions/cache` step keyed on `.arc-tool-versions`. SwiftFormat now lints against the project's own `.swiftformat` instead of `ARCDevTools/configs/swiftformat`, so project overrides apply and CI matches the git hooks.
