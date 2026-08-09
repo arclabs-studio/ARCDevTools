@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.14.3] - 2026-08-10
+
+### Fixed
+- **Symlinks from earlier setup runs were never gitignored.** v2.14.1 fixed the `.gitignore` updaters to append missing entries, but they are only called with the symlinks created during the current run — anything linked by a previous run hits the `already exists` guard first. Projects whose `.gitignore` predates a given skill or agent therefore never received the entry, no matter how often setup ran. Pre-existing entries are now included when the destination is a symlink; copied ARCDevTools skills are still left tracked.
+
+---
+
 ## [2.14.2] - 2026-08-10
 
 ### Fixed
