@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.14.4] - 2026-08-10
+
+### Fixed
+- **Pre-commit hook aborted on staged files under ignored paths.** The hook re-stages files after SwiftFormat with `git add`, which refuses paths matched by `.gitignore`. Repos that ignore `.claude/skills/` while tracking the ARCDevTools skills copied inside it could not commit at all — `set -e` turned the refusal into a hook failure. Now uses `git add -f`; the files were already staged, so they are already tracked.
+
+---
+
 ## [2.14.3] - 2026-08-10
 
 ### Fixed
