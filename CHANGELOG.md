@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.14.2] - 2026-08-10
+
+### Fixed
+- **`make fix` reformatted the ARCDevTools submodule.** `configs/swiftformat` only excluded build directories, so `swiftformat --config .swiftformat .` walked into the submodule and rewrote the tooling repo's own sources, leaving a `-dirty` submodule pointer in the consumer project. Both configs now exclude `ARCDevTools`, `Tools/ARCDevTools` (the nested layout) and `.arc-tools`. `.swiftformat` is project-owned, so existing projects need the `--exclude` line updated by hand.
+
+---
+
 ## [2.14.1] - 2026-08-10
 
 ### Fixed
