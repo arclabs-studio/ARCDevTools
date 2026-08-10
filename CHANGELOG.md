@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.14.5] - 2026-08-10
+
+### Fixed
+- **`arc-package-validator` linked ARCKnowledge docs with a broken relative path.** `../../ARCKnowledge/...` from `.claude/skills/arc-package-validator/` resolves to `.claude/ARCKnowledge/...` — wrong in this repo, and wrong again in consumer projects, where the skill is copied to `.claude/skills/` while ARCKnowledge sits under a submodule path that varies per project. The `Validate Markdown Links` job flagged all three as dead in every repo that picked up the skill. Now absolute GitHub URLs.
+
+---
+
 ## [2.14.4] - 2026-08-10
 
 ### Fixed
