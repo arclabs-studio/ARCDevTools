@@ -11,7 +11,7 @@ import Foundation
 
 // MARK: - Constants
 
-let version = "1.3.0"
+let version = "1.4.0"
 
 // MARK: - Project Type Detection
 
@@ -34,6 +34,7 @@ struct Options {
     var noWorkflows: Bool = false
     var showHelp: Bool = false
     var force: Bool = false
+    var allWorkflows: Bool = false
 
     var isInteractive: Bool {
         !withWorkflows && !noWorkflows
@@ -52,6 +53,8 @@ func parseArguments() -> Options {
             options.noWorkflows = true
         case "--force", "-f":
             options.force = true
+        case "--all-workflows":
+            options.allWorkflows = true
         case "--help", "-h":
             options.showHelp = true
         default:
@@ -73,6 +76,9 @@ func printHelp() {
     print("  --no-workflows    Skip GitHub Actions workflows (non-interactive)")
     print("  --force, -f       Overwrite project-owned configs (.swiftlint.yml, .swiftformat)")
     print("                    Studio-owned configs (.swiftlint.base.yml) always refresh.")
+    print("  --all-workflows   Add the full template workflow set even to a repo that")
+    print("                    maintains its own CI. Off by default: such repos only get")
+    print("                    their existing ARCDevTools-generated workflows refreshed.")
     print("  --help, -h        Show this help message")
     print("")
     print("Examples:")
@@ -557,7 +563,48 @@ func rewriteToolsPath(in content: String) -> String {
     return content.replacingOccurrences(of: "ARCDevTools/", with: "\(arcDevToolsPath)/")
 }
 
-func setupWorkflows(for projectType: ProjectType) throws {
+/// Header stamped onto every workflow this script generates. Its presence is how
+/// a later run tells "we wrote this" apart from "the project wrote this".
+let workflowTemplateMarker = "# ARCDevTools Workflow Template"
+
+/// `docs.yml` and `validate-release.yml` live in `workflows-spm/` for historical
+/// reasons, but they are ARCDevTools' own CI rather than templates: `docs.yml`
+/// hardcodes `xcodebuild -scheme ARCDevTools` and `validate-release.yml` builds
+/// `--product arcdevtools-setup`. Copied into a consumer they produce workflows
+/// that can only fail. Excluded here rather than moved, so ARCDevTools' own CI
+/// setup is left untouched.
+let arcDevToolsOwnWorkflows: Set<String> = ["docs.yml", "validate-release.yml"]
+
+/// True when the project maintains hand-written CI — that is, any workflow this
+/// script did not generate. Judged by the template header rather than the
+/// filename, so a `quality.yml` the project has taken over counts the same as a
+/// bespoke `ci.yml`.
+///
+/// Dropping the full template set next to hand-written CI produces duplicate
+/// coverage (two lint jobs, two build jobs) and gates the repo never opted into,
+/// so those repos get their existing ARCDevTools-generated workflows refreshed
+/// and nothing new added unless `--all-workflows` is passed.
+func projectOwnsItsCI(workflowsDir: URL) -> Bool {
+    guard let files = try? fileManager.contentsOfDirectory(atPath: workflowsDir.path) else {
+        return false
+    }
+
+    for filename in files where filename.hasSuffix(".yml") || filename.hasSuffix(".yaml") {
+        // Claude Code installs its own workflows; they are not a signal about
+        // how the project manages CI and never collide with the template set.
+        if filename.hasPrefix("claude") { continue }
+
+        let path = workflowsDir.appendingPathComponent(filename)
+        let content = (try? String(contentsOf: path, encoding: .utf8)) ?? ""
+        if !content.hasPrefix(workflowTemplateMarker) {
+            return true
+        }
+    }
+
+    return false
+}
+
+func setupWorkflows(for projectType: ProjectType, allWorkflows: Bool) throws {
     print("")
     printInfo("⚙️  Copying GitHub Actions workflows (\(projectType.displayName))...")
 
@@ -582,22 +629,45 @@ func setupWorkflows(for projectType: ProjectType) throws {
     try? fileManager.createDirectory(at: githubWorkflowsDir, withIntermediateDirectories: true)
 
     // Workflows specific to project type (quality.yml, tests.yml)
-    let projectSpecificWorkflows = ["quality.yml", "tests.yml"]
+    let projectSpecificWorkflows: Set<String> = ["quality.yml", "tests.yml"]
 
-    // Copy project-specific workflows from the appropriate directory
-    let workflowFiles = try fileManager.contentsOfDirectory(atPath: workflowsSource.path)
-    for filename in workflowFiles where filename.hasSuffix(".yml") {
-        let sourceFile = workflowsSource.appendingPathComponent(filename)
+    let ownsCI = projectOwnsItsCI(workflowsDir: githubWorkflowsDir)
+    let addNewWorkflows = allWorkflows || !ownsCI
+    var skipped: [String] = []
+
+    if ownsCI, !allWorkflows {
+        printInfo("   This project has its own CI workflows.")
+        printInfo("   Refreshing only the workflows ARCDevTools generated; not adding new ones.")
+        printInfo("   Pass --all-workflows to install the full template set anyway.")
+    }
+
+    /// Writes one template, unless it would be a new file in a project that owns
+    /// its CI. Returns whether it wrote.
+    func installWorkflow(named filename: String, from sourceDir: URL, sourceLabel: String, header: String) throws -> Bool {
         let destFile = githubWorkflowsDir.appendingPathComponent(filename)
+        let exists = fileManager.fileExists(atPath: destFile.path)
 
-        let originalContent = try String(contentsOf: sourceFile, encoding: .utf8)
+        if !exists, !addNewWorkflows {
+            skipped.append(filename)
+            return false
+        }
 
+        // A file we did not generate belongs to the project — never clobber it.
+        if exists {
+            let current = (try? String(contentsOf: destFile, encoding: .utf8)) ?? ""
+            if !current.hasPrefix(workflowTemplateMarker) {
+                skipped.append("\(filename) (project-owned, kept)")
+                return false
+            }
+        }
+
+        let originalContent = try String(contentsOf: sourceDir.appendingPathComponent(filename), encoding: .utf8)
         let templateComment = """
-        # ARCDevTools Workflow Template (\(projectType.displayName))
-        # Source: https://github.com/arclabs-studio/ARCDevTools/\(workflowsDirName)/\(filename)
+        \(header)
+        # Source: https://github.com/arclabs-studio/ARCDevTools/\(sourceLabel)/\(filename)
         #
         # This file was copied from ARCDevTools. You can customize it for your project.
-        # To update: re-run ./\(arcDevToolsPath)/arcdevtools-setup or manually copy from \(arcDevToolsPath)/\(workflowsDirName)/
+        # To update: re-run ./\(arcDevToolsPath)/arcdevtools-setup or manually copy from \(arcDevToolsPath)/\(sourceLabel)/
 
         """
         let newContent = templateComment + rewriteToolsPath(in: originalContent)
@@ -605,36 +675,44 @@ func setupWorkflows(for projectType: ProjectType) throws {
         try? fileManager.removeItem(at: destFile)
         try newContent.write(to: destFile, atomically: true, encoding: .utf8)
         printSuccess("   \(filename)")
+        return true
     }
 
-    // Copy shared workflows from workflows-spm/ directory (those not project-specific)
+    // Copy project-specific workflows from the appropriate directory
+    // `workflows-spm/` doubles as the shared directory, so ARCDevTools' own CI
+    // files sit alongside the templates and must be filtered here too.
+    let workflowFiles = try fileManager.contentsOfDirectory(atPath: workflowsSource.path)
+    for filename in workflowFiles.sorted()
+    where filename.hasSuffix(".yml") && !arcDevToolsOwnWorkflows.contains(filename) {
+        _ = try installWorkflow(
+            named: filename,
+            from: workflowsSource,
+            sourceLabel: workflowsDirName,
+            header: "\(workflowTemplateMarker) (\(projectType.displayName))"
+        )
+    }
+
+    // Copy shared workflows from workflows-spm/ — those that are neither
+    // project-type-specific nor ARCDevTools' own CI.
     if fileManager.fileExists(atPath: sharedWorkflowsSource.path) {
         let sharedFiles = try fileManager.contentsOfDirectory(atPath: sharedWorkflowsSource.path)
-        for filename in sharedFiles where filename.hasSuffix(".yml") && !projectSpecificWorkflows.contains(filename) {
-            let sourceFile = sharedWorkflowsSource.appendingPathComponent(filename)
-            let destFile = githubWorkflowsDir.appendingPathComponent(filename)
-
-            // Skip if already exists (don't overwrite project-specific)
-            if fileManager.fileExists(atPath: destFile.path) {
-                continue
-            }
-
-            let originalContent = try String(contentsOf: sourceFile, encoding: .utf8)
-
-            let templateComment = """
-            # ARCDevTools Workflow Template
-            # Source: https://github.com/arclabs-studio/ARCDevTools/workflows-spm/\(filename)
-            #
-            # This file was copied from ARCDevTools. You can customize it for your project.
-            # To update: re-run ./\(arcDevToolsPath)/arcdevtools-setup or manually copy from \(arcDevToolsPath)/workflows-spm/
-
-            """
-            let newContent = templateComment + rewriteToolsPath(in: originalContent)
-
-            try? fileManager.removeItem(at: destFile)
-            try newContent.write(to: destFile, atomically: true, encoding: .utf8)
-            printSuccess("   \(filename)")
+        let shared = sharedFiles.sorted().filter {
+            $0.hasSuffix(".yml")
+                && !projectSpecificWorkflows.contains($0)
+                && !arcDevToolsOwnWorkflows.contains($0)
         }
+        for filename in shared {
+            _ = try installWorkflow(
+                named: filename,
+                from: sharedWorkflowsSource,
+                sourceLabel: "workflows-spm",
+                header: workflowTemplateMarker
+            )
+        }
+    }
+
+    if !skipped.isEmpty {
+        printInfo("   Not installed: \(skipped.joined(separator: ", "))")
     }
 
     // Copy templates
@@ -1046,7 +1124,7 @@ func main() {
         }
 
         if shouldInstallWorkflows {
-            try setupWorkflows(for: projectType)
+            try setupWorkflows(for: projectType, allWorkflows: options.allWorkflows)
         }
 
         // Handle ci_scripts installation (iOS Apps only)
