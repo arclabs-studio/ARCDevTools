@@ -316,8 +316,19 @@ Workflows are templates adapted per project type. Choose to install them during 
 - `enforce-gitflow.yml` — Branch rule enforcement
 - `sync-develop.yml` — Auto-sync main to develop
 - `release-drafter.yml` — Auto-draft release notes from PRs
+- `validate-pr-title.yml` — Conventional Commits check on PR titles
 
-**SPM-only:** `docs.yml` (DocC), `validate-release.yml`
+**Not templates:** `docs.yml` and `validate-release.yml` also live in `workflows-spm/`, but they are ARCDevTools' own CI — `docs.yml` hardcodes `xcodebuild -scheme ARCDevTools` and `validate-release.yml` builds `--product arcdevtools-setup`. Setup never copies them; in a consumer project they could only fail.
+
+**Projects with their own CI**
+
+If `.github/workflows/` already contains a workflow ARCDevTools did not generate — a hand-written `ci.yml`, or a `quality.yml` the project has taken over — setup refreshes only the workflows it generated and adds nothing new. Piling the template set next to hand-written CI produces duplicate lint and build jobs plus gates the project never opted into.
+
+Ownership is judged by the `# ARCDevTools Workflow Template` header, not the filename, so a file you take over is never overwritten. To install the full set regardless:
+
+```bash
+./ARCDevTools/arcdevtools-setup --with-workflows --all-workflows
+```
 
 > **Billing note:** macOS runners have a 10x billing multiplier on GitHub Actions. ARCDevTools optimizes by running lint/format on Ubuntu. See [docs/ci-cd.md](docs/ci-cd.md) for details.
 
