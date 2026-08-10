@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.15.0] - 2026-08-10
+
+### Fixed
+
+- **Setup copied ARCDevTools' own CI into consumer projects.** `docs.yml` and `validate-release.yml` sit in `workflows-spm/`, so setup treated them as templates — but `docs.yml` hardcodes `xcodebuild -scheme ARCDevTools` and `validate-release.yml` builds `--product arcdevtools-setup`. Every project that received them got a workflow that can only fail. They trigger on pushes to `main` and on tags rather than on pull requests, which is why the breakage never surfaced in PR checks. Setup no longer copies either; they remain in place as ARCDevTools' own workflows.
+- **Setup piled the whole template set onto projects that maintain their own CI.** Re-running it in a repo with a hand-written `ci.yml` added eight template workflows beside it: duplicate lint and build jobs, plus gates the project never opted into (`release-drafter.yml` fails by construction on a feature branch, since its config must live on the default branch). Such projects now get only their existing ARCDevTools-generated workflows refreshed.
+
+  Ownership is decided by the `# ARCDevTools Workflow Template` header rather than the filename, so a `quality.yml` a project has taken over counts as project-owned and is never overwritten. `--all-workflows` installs the full set regardless.
+
+### Added
+
+- **`--all-workflows` flag** — installs the complete template workflow set even in a project that owns its CI. Off by default.
+
+### Changed
+
+- **ARCKnowledge submodule → v2.16.0.** Brings the dead-link cleanup (30 → 0, verified with the same `markdown-link-check` config ARC CI uses) and the `arc-testflight` agent alignment with the tag-push Xcode Cloud pipeline. Also the first ARCKnowledge tag containing the `AGENTS.md` Xcode Tooling Policy section and the `Quality/api-keys.md` standard, which had shipped to `main` untagged.
+- **`arcdevtools-setup` → 1.4.0.**
+
+---
+
 ## [2.14.5] - 2026-08-10
 
 ### Fixed
