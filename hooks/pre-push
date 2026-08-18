@@ -17,6 +17,49 @@ if [ "$SKIP_HOOKS" = "1" ]; then
     exit 0
 fi
 
+
+# ---------------------------------------------------------------------------
+# Protected branch guard
+#
+# main and develop must never be deleted or force-pushed. GitHub branch
+# protection and rulesets are unavailable on free personal accounts with
+# private repos, so this is the backstop.
+#
+# Covers pushes from a clone only — it cannot stop the "Delete branch" button
+# the GitHub web UI offers after a merge.
+#
+# Deliberate override: PROTECTED_BRANCH_OVERRIDE=1 git push ...
+# ---------------------------------------------------------------------------
+__arc_protected="main develop"
+__arc_zero="0000000000000000000000000000000000000000"
+__arc_blocked=0
+
+while read -r _arc_lref __arc_lsha __arc_rref __arc_rsha; do
+    [ -z "${__arc_rref:-}" ] && continue
+    __arc_branch="${__arc_rref#refs/heads/}"
+    for __arc_p in $__arc_protected; do
+        [ "$__arc_branch" = "$__arc_p" ] || continue
+        if [ "$__arc_lsha" = "$__arc_zero" ]; then
+            echo "🛑 Refusing to DELETE protected branch '$__arc_branch'."
+            __arc_blocked=1
+        elif [ "$__arc_rsha" != "$__arc_zero" ] && ! git merge-base --is-ancestor "$__arc_rsha" "$__arc_lsha" 2>/dev/null; then
+            echo "🛑 Refusing NON-FAST-FORWARD push to protected branch '$__arc_branch' (would discard remote commits)."
+            __arc_blocked=1
+        fi
+    done
+done
+
+if [ "$__arc_blocked" -eq 1 ]; then
+    if [ "${PROTECTED_BRANCH_OVERRIDE:-0}" = "1" ]; then
+        echo "⚠️  PROTECTED_BRANCH_OVERRIDE=1 set — allowing anyway."
+    else
+        echo ""
+        echo "   main and develop must never be deleted or rewritten."
+        echo "   If genuinely intended: PROTECTED_BRANCH_OVERRIDE=1 git push ..."
+        exit 1
+    fi
+fi
+
 echo "🚀 Pre-push: Running quality checks..."
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -25,7 +68,7 @@ cd "$REPO_ROOT" || exit 1
 # Resolve the *pinned* SwiftLint/SwiftFormat so local results match CI.
 # The submodule is usually at ARCDevTools/, but projects may nest it
 # (e.g. Tools/ARCDevTools), so locate it rather than hardcoding the path.
-ARC_TOOL_ENV="$(find "$REPO_ROOT" -maxdepth 3 -path '*/ARCDevTools/scripts/tool-env.sh' -print -quit 2>/dev/null)"
+ARC_TOOL_ENV="$(find "$REPO_ROOT" -maxdepth 4 -path '*/ARCDevTools/scripts/tool-env.sh' -print -quit 2>/dev/null)"
 if [ -n "$ARC_TOOL_ENV" ]; then
     # shellcheck source=/dev/null
     . "$ARC_TOOL_ENV"
