@@ -1,6 +1,6 @@
 # 🛠️ ARCDevTools
 
-![Version](https://img.shields.io/badge/Version-2.5.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-orange.svg)
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-macOS%20%7C%20iOS-blue.svg)
