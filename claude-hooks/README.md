@@ -15,8 +15,10 @@ these hooks only fire when ARCDevTools sits at (or is symlinked to)
   block or prompt. A `deny` applies even under `bypassPermissions`, which is what makes hooks
   the hard layer.
 - **PostToolUse** — cannot block; the tool already ran. Use it for formatting and for feedback
-  that teaches (returning concrete diagnostics back to the model closes the loop without
-  spending a human turn).
+  that teaches: returning concrete diagnostics ("line 7:19: error: Force Cast Violation")
+  closes the loop in the same turn instead of at commit time. `swiftlint-feedback.sh` is the
+  worked example. Order matters within a matcher group — formatting runs before linting, so
+  the lint sees the formatted file.
 - **SessionStart** — `additionalContext` is injected into the session.
 - **Stop** — `exit 2` sends the model back to work with stderr as the reason. Honour
   `stop_hook_active` or you will loop.
@@ -32,6 +34,7 @@ these hooks only fire when ARCDevTools sits at (or is symlinked to)
 | `asc-mutation-guard.sh` | PreToolUse · Bash | Blocks state-mutating `asc` verbs unless `--dry-run` or `ASC_CONFIRMED=1` |
 | `protect-sensitive-files.sh` | PreToolUse · Edit\|Write | Blocks edits to secrets/credentials, `project.pbxproj` and `.xcodeproj` internals, `*.xcstrings`, lockfiles, `.git/`, DerivedData/`.build`/SPM checkouts |
 | `format-on-save.sh` | PostToolUse · Edit\|Write | SwiftFormat on the edited file |
+| `swiftlint-feedback.sh` | PostToolUse · Edit\|Write | Lints the just-formatted file and returns the concrete violations to the agent. Silent when clean. Resolves `.swiftlint.yml` upward from the file, falling back to `configs/swiftlint.base.yml` |
 | `session-start.sh` | SessionStart · startup | Injects branch, last release tag, pending/staged diffstat, TODO/FIXME count and recent commits |
 
 ## Opt-in hooks (present, deliberately not wired globally)
