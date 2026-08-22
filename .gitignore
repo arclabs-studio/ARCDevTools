@@ -24,6 +24,8 @@ logs/
 *.p12
 *.cer
 *secret*
+# Exception: this is a hook script that SCANS for secrets, not a secret itself.
+!claude-hooks/secrets-commit-guard.sh
 *password*
 *credentials*
 *.mobileprovision
