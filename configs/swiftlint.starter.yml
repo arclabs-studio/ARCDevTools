@@ -14,12 +14,15 @@ parent_config: .swiftlint.base.yml
 # Swift Package layout:
 #   - Sources
 #   - Tests
+#   - Examples   (demo app, `[PackageName]DemoApp`)
 # iOS App layout (example):
 #   - MyApp/MyApp
 #   - MyApp/MyAppTests
+# Paths that do not exist are ignored by SwiftLint.
 included:
   - Sources
   - Tests
+  - Examples
 
 # Add project-local rule tweaks below (overrides .swiftlint.base.yml).
 # Example:
