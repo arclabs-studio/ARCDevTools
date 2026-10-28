@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **`pre-commit` hook** — staged files are now handled as a NUL-separated array instead of `xargs`/word-splitting, so paths with spaces, quotes or non-ASCII characters (e.g. `Configuración.swift`) are formatted, re-staged and linted correctly.
+- **Demo apps not linted** — `configs/swiftlint.starter.yml` now includes `Examples`, and the SPM `quality.yml` SwiftFormat check covers `Examples/` when present. Existing projects keep their project-owned `.swiftlint.yml`: add `- Examples` to its `included:` list manually.
+
 ## [1.0.0] - 2026-08-20
 
 First public release of **ARCDevTools**.
