@@ -1,6 +1,6 @@
 #!/bin/bash
 # ARCDevTools Pre-commit Hook
-# Version: 1.3.0
+# Version: 1.4.0
 
 set -e
 
@@ -36,30 +36,36 @@ fi
 
 echo "Pre-commit: Verificando calidad de codigo..."
 
-# Detectar archivos Swift staged
-STAGED_SWIFT=$(git diff --cached --name-only --diff-filter=ACM | grep ".swift$" || true)
+# Detectar archivos Swift staged.
+# -z + read -d '' para soportar rutas con espacios, comillas o caracteres
+# no ASCII (sin -z, git entrecomilla esos nombres por core.quotePath).
+# Bucle while en lugar de mapfile: macOS trae bash 3.2.
+STAGED_SWIFT=()
+while IFS= read -r -d '' file; do
+  STAGED_SWIFT+=("$file")
+done < <(git diff --cached --name-only -z --diff-filter=ACM -- '*.swift')
 
-if [ -z "$STAGED_SWIFT" ]; then
+if [ ${#STAGED_SWIFT[@]} -eq 0 ]; then
   echo "  No hay archivos Swift en stage, omitiendo..."
   exit 0
 fi
 
 echo "  Archivos a verificar:"
-echo "$STAGED_SWIFT" | sed 's/^/    - /'
+printf '    - %s\n' "${STAGED_SWIFT[@]}"
 
 # 1. SwiftFormat (auto-fix)
 if [ -n "$SWIFTFORMAT_BIN" ]; then
   echo ""
   echo "  Aplicando SwiftFormat..."
   arc_tool_warn swiftformat
-  echo "$STAGED_SWIFT" | xargs "$SWIFTFORMAT_BIN" --config .swiftformat 2>&1 | grep -v "running" || true
+  "$SWIFTFORMAT_BIN" --config .swiftformat "${STAGED_SWIFT[@]}" 2>&1 | grep -v "running" || true
 
   # Re-stage archivos formateados.
   # -f porque algunos repos ignoran rutas que sí tienen ficheros trackeados
   # (p. ej. .claude/skills/ con arc-package-validator dentro). Sin -f, `git add`
   # aborta con "paths are ignored", y con `set -e` eso bloquea el commit entero.
   # Es seguro: estos ficheros ya estaban en stage, luego ya están trackeados.
-  echo "$STAGED_SWIFT" | xargs git add -f
+  git add -f -- "${STAGED_SWIFT[@]}"
   echo "  Formato aplicado"
 else
   arc_tool_warn swiftformat
@@ -72,28 +78,34 @@ if [ -n "$SWIFTLINT_BIN" ]; then
   arc_tool_warn swiftlint
 
   # Filter staged files to only those in included paths from .swiftlint.yml
-  LINT_FILES=""
+  INCLUDED_PATHS=()
   if [ -f ".swiftlint.yml" ]; then
-    INCLUDED_PATHS=$(grep -A 100 "^included:" .swiftlint.yml | grep "^  - " | sed 's/^  - //' | tr -d '"' || true)
-    if [ -n "$INCLUDED_PATHS" ]; then
-      for file in $STAGED_SWIFT; do
-        for inc in $INCLUDED_PATHS; do
-          if echo "$file" | grep -q "^$inc/"; then
-            LINT_FILES="$LINT_FILES $file"
-            break
-          fi
-        done
-      done
-    else
-      LINT_FILES="$STAGED_SWIFT"
-    fi
-  else
-    LINT_FILES="$STAGED_SWIFT"
+    while IFS= read -r inc; do
+      if [ -n "$inc" ]; then
+        INCLUDED_PATHS+=("$inc")
+      fi
+    done < <(grep -A 100 "^included:" .swiftlint.yml | grep "^  - " | sed 's/^  - //' | tr -d '"' || true)
   fi
 
-  if [ -z "$LINT_FILES" ]; then
+  LINT_FILES=()
+  if [ ${#INCLUDED_PATHS[@]} -gt 0 ]; then
+    for file in "${STAGED_SWIFT[@]}"; do
+      for inc in "${INCLUDED_PATHS[@]}"; do
+        case "$file" in
+          "$inc"/*)
+            LINT_FILES+=("$file")
+            break
+            ;;
+        esac
+      done
+    done
+  else
+    LINT_FILES=("${STAGED_SWIFT[@]}")
+  fi
+
+  if [ ${#LINT_FILES[@]} -eq 0 ]; then
     echo "  No hay archivos Swift en paths incluidos, omitiendo lint..."
-  elif echo "$LINT_FILES" | xargs "$SWIFTLINT_BIN" lint --config .swiftlint.yml --strict --quiet; then
+  elif "$SWIFTLINT_BIN" lint --config .swiftlint.yml --strict --quiet -- "${LINT_FILES[@]}"; then
     echo "  SwiftLint passed"
   else
     echo ""
