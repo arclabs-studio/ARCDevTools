@@ -7,12 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.1.0] - 2026-10-28
+
+### Added
+
+- **Deterministic guard layer for agentic Claude Code sessions** ([#170](https://github.com/arclabs-studio/ARCDevTools/pull/170)):
+  - `block-dangerous-commands.sh` — blocks `rm -rf`, `sudo rm`, `chmod 777`, `.env` redirection, download-piped-to-shell and `dd`/`mkfs` to a device.
+  - `secrets-commit-guard.sh` — scans the staged diff on `git commit` for provider tokens, PEM keys, credential-shaped assignments and JWTs (ships in "ask" mode).
+  - `xcode-mcp-only.sh` (opt-in) — blocks `xcodebuild`/`swift build`/`swift test`/`swiftc`/`simctl`/`xcodegen`, with an `ARC_CLI_OK=1` escape hatch.
+  - `stop-build-gate.sh` (opt-in) — requires 0 errors and 0 warnings before Claude may stop.
+
+### Changed
+
+- **`protect-sensitive-files.sh`** — also protects `.xcstrings`, `.xcodeproj` internals, `.git/`, `DerivedData`, `.build` and SPM checkouts ([#170](https://github.com/arclabs-studio/ARCDevTools/pull/170)).
+- **`session-start.sh`** — adds TODO/FIXME count and recent commits; exits cleanly outside a git work tree ([#170](https://github.com/arclabs-studio/ARCDevTools/pull/170)).
 
 ### Fixed
 
-- **`pre-commit` hook** — staged files are now handled as a NUL-separated array instead of `xargs`/word-splitting, so paths with spaces, quotes or non-ASCII characters (e.g. `Configuración.swift`) are formatted, re-staged and linted correctly.
-- **Demo apps not linted** — `configs/swiftlint.starter.yml` now includes `Examples`, and the SPM `quality.yml` SwiftFormat check covers `Examples/` when present. Existing projects keep their project-owned `.swiftlint.yml`: add `- Examples` to its `included:` list manually.
+- **`pre-commit` hook** — staged files are now handled as a NUL-separated array instead of `xargs`/word-splitting, so paths with spaces, quotes or non-ASCII characters (e.g. `Configuración.swift`) are formatted, re-staged and linted correctly ([#172](https://github.com/arclabs-studio/ARCDevTools/pull/172)).
+- **Demo apps not linted** — `configs/swiftlint.starter.yml` now includes `Examples`, and the SPM `quality.yml` SwiftFormat check covers `Examples/` when present. Existing projects keep their project-owned `.swiftlint.yml`: add `- Examples` to its `included:` list manually ([#172](https://github.com/arclabs-studio/ARCDevTools/pull/172)).
 
 ## [1.0.0] - 2026-08-20
 
