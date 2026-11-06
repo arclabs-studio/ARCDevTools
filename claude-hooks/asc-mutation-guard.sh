@@ -9,8 +9,11 @@
 #   asc submit ...
 #   asc release ...                  (release / phased-release / pause / resume)
 #   asc metadata push ...
-#   asc pricing edit ...
-#   asc reviews create-response ...
+#   asc pricing ppp|schedule create|availability create|edit|remove-from-sale ...
+#   asc subscriptions pricing prices set ...
+#   asc builds add-groups|remove-groups|expire|expire-all ...
+#   asc publish ...
+#   asc reviews respond|respond-batch ...
 #   asc apps wall submit ...
 #   asc workflow run ...             (workflows can hide submit/push/edit)
 #
@@ -72,8 +75,8 @@ fi
 # avoids false positives when "asc submit" appears later in a pipeline that
 # starts with grep/echo/etc.
 
-MUTATING_PATTERN='^[[:space:]]*([A-Za-z_]+=[^[:space:]]+[[:space:]]+)*asc[[:space:]]+(submit|release|workflow[[:space:]]+run)([[:space:]]|$)'
-MUTATING_PATTERN_2='^[[:space:]]*([A-Za-z_]+=[^[:space:]]+[[:space:]]+)*asc[[:space:]]+(metadata[[:space:]]+push|pricing[[:space:]]+edit|apps[[:space:]]+wall[[:space:]]+submit|reviews[[:space:]]+create-response)([[:space:]]|$)'
+MUTATING_PATTERN='^[[:space:]]*([A-Za-z_]+=[^[:space:]]+[[:space:]]+)*asc[[:space:]]+(submit|release|publish|workflow[[:space:]]+run)([[:space:]]|$)'
+MUTATING_PATTERN_2='^[[:space:]]*([A-Za-z_]+=[^[:space:]]+[[:space:]]+)*asc[[:space:]]+(metadata[[:space:]]+push|pricing[[:space:]]+(ppp|schedule[[:space:]]+create|availability[[:space:]]+(create|edit|remove-from-sale))|subscriptions[[:space:]]+pricing[[:space:]]+prices[[:space:]]+set|builds[[:space:]]+(add-groups|remove-groups|expire|expire-all)|apps[[:space:]]+wall[[:space:]]+submit|reviews[[:space:]]+(respond|respond-batch))([[:space:]]|$)'
 
 REASON=""
 MATCHED_VERB=""
@@ -85,12 +88,12 @@ SEGMENTS=$(echo "$CLEANED" | tr ';|&' '\n')
 while IFS= read -r segment; do
     if [[ -z "$segment" ]]; then continue; fi
     if echo "$segment" | grep -qE "$MUTATING_PATTERN"; then
-        MATCHED_VERB=$(echo "$segment" | grep -oE 'asc[[:space:]]+(submit|release|workflow[[:space:]]+run)' | head -1)
+        MATCHED_VERB=$(echo "$segment" | grep -oE 'asc[[:space:]]+(submit|release|publish|workflow[[:space:]]+run)' | head -1)
         REASON="Refusing to run \"$MATCHED_VERB\" because it mutates App Store Connect state."
         break
     fi
     if echo "$segment" | grep -qE "$MUTATING_PATTERN_2"; then
-        MATCHED_VERB=$(echo "$segment" | grep -oE 'asc[[:space:]]+(metadata[[:space:]]+push|pricing[[:space:]]+edit|apps[[:space:]]+wall[[:space:]]+submit|reviews[[:space:]]+create-response)' | head -1)
+        MATCHED_VERB=$(echo "$segment" | grep -oE 'asc[[:space:]]+(metadata[[:space:]]+push|pricing[[:space:]]+(ppp|schedule[[:space:]]+create|availability[[:space:]]+(create|edit|remove-from-sale))|subscriptions[[:space:]]+pricing[[:space:]]+prices[[:space:]]+set|builds[[:space:]]+(add-groups|remove-groups|expire|expire-all)|apps[[:space:]]+wall[[:space:]]+submit|reviews[[:space:]]+(respond|respond-batch))' | head -1)
         REASON="Refusing to run \"$MATCHED_VERB\" because it mutates App Store Connect state."
         break
     fi
