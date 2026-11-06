@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] - 2026-11-06
+
+### Fixed
+
+- **`asc-mutation-guard.sh`** — updated for asc 6.x, which removed `pricing edit` and `reviews create-response`. The guard now also blocks `pricing ppp|schedule create|availability create|edit|remove-from-sale`, `subscriptions pricing prices set`, `builds add-groups|remove-groups|expire|expire-all`, `publish`, and `reviews respond|respond-batch` ([#177](https://github.com/arclabs-studio/ARCDevTools/pull/177)).
+
 ## [1.1.0] - 2026-10-28
 
 ### Added
