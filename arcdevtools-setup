@@ -730,12 +730,47 @@ func setupWorkflows(for projectType: ProjectType, allWorkflows: Bool) throws {
             let source = templatesDir.appendingPathComponent(template)
             let dest = githubDir.appendingPathComponent(template)
 
-            if fileManager.fileExists(atPath: source.path) {
-                try? fileManager.removeItem(at: dest)
+            guard fileManager.fileExists(atPath: source.path) else { continue }
+            try? fileManager.removeItem(at: dest)
+
+            if template == "release-drafter.yml" {
+                try installReleaseDrafterConfig(from: source, to: dest, projectType: projectType)
+            } else {
                 try? fileManager.copyItem(at: source, to: dest)
             }
         }
     }
+}
+
+/// Writes the release-drafter config, filling `__INSTALLATION__` for the project type.
+///
+/// Swift packages get a SwiftPM snippet built from release-drafter's own `$OWNER` and
+/// `$REPOSITORY` variables, so release notes always point at the repository being released.
+/// iOS apps are not consumed as dependencies, so their notes omit the section.
+func installReleaseDrafterConfig(from source: URL, to dest: URL, projectType: ProjectType) throws {
+    let installation: String
+    switch projectType {
+    case .swiftPackage:
+        installation = """
+          ## Installation
+
+          Add $REPOSITORY to your Swift package dependencies:
+
+          ```swift
+          dependencies: [
+              .package(url: "https://github.com/$OWNER/$REPOSITORY.git", from: "$RESOLVED_VERSION")
+          ]
+          ```
+
+
+        """
+    case .iOSApp:
+        installation = ""
+    }
+
+    let template = try String(contentsOf: source, encoding: .utf8)
+    let config = template.replacingOccurrences(of: "  __INSTALLATION__\n\n", with: installation)
+    try config.write(to: dest, atomically: true, encoding: .utf8)
 }
 
 func setupClaudeSkills() throws -> [String] {

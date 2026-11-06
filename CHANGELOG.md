@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.2] - 2026-11-06
+
+### Fixed
+
+- **Release notes advertised ARCDevTools in every project** — setup copied `templates/release-drafter.yml` verbatim, so each project's `.github/release-drafter.yml` told users to add `ARCDevTools.git` and run `arcdevtools-setup`. The template now carries an `__INSTALLATION__` placeholder: Swift packages get a SwiftPM snippet built from release-drafter's `$OWNER`/`$REPOSITORY` variables, and iOS apps get no Installation section. Re-run setup to regenerate the file ([#176](https://github.com/arclabs-studio/ARCDevTools/pull/176)).
+
 ## [1.1.1] - 2026-11-06
 
 ### Fixed
